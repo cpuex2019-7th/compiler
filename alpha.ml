@@ -2,7 +2,7 @@
 
 open KNormal
 
-let find x env = try M.find x env with Not_found -> x
+let find x env = try M.find x env with Not_found -> x (*外部変数はrenameしない*)
 
 let rec g env = function (* α変換ルーチン本体 (caml2html: alpha_g) *)
   | Unit -> Unit
