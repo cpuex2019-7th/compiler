@@ -13,6 +13,7 @@ and exp = (* 一つ一つの命令に対応する式 (caml2html: sparcasm_exp) *
   | Mov of Id.t
   | Neg of Id.t
   | Add of Id.t * id_or_imm
+  | Addi of Id.t * id_or_imm
   | Sub of Id.t * id_or_imm
   | SLL of Id.t * id_or_imm
   | Ld of Id.t * id_or_imm
@@ -61,6 +62,7 @@ let reg_hp = "x3" (* heap pointer (caml2html: sparcasm_reghp) *)
 let reg_ra = "x1" (* return address *)
 let reg_fz = "f0"           (*zero register for floating point*)
 let is_reg x = (x.[0] = 'x' || x.[0] = 'f')
+
              
 let co_freg_table =
   let ht = Hashtbl.create 16 in
@@ -73,6 +75,7 @@ let co_freg_table =
   ht
 let co_freg freg = Hashtbl.find co_freg_table freg (* "companion" freg *)
 
+             
 (* super-tenuki *)
 let rec remove_and_uniq xs = function
   | [] -> []
@@ -84,7 +87,7 @@ let fv_id_or_imm = function V(x) -> [x] | _ -> []
 let rec fv_exp = function
   | Nop | Set(_) | SetL(_) | Comment(_) | Restore(_) -> []
   | Mov(x) | Neg(x) | FMovD(x) | FNegD(x) | Save(x, _) -> [x]
-  | Add(x, y') | Sub(x, y') | SLL(x, y') | Ld(x, y') | LdDF(x, y') -> x :: fv_id_or_imm y'
+  | Add(x, y') | Addi(x, y') | Sub(x, y') | SLL(x, y') | Ld(x, y') | LdDF(x, y') -> x :: fv_id_or_imm y'
   | St(x, y, z') | StDF(x, y, z') -> x :: y :: fv_id_or_imm z'
   | FAddD(x, y) | FSubD(x, y) | FMulD(x, y) | FDivD(x, y) -> [x; y]
   | IfEq(x, y', e1, e2) | IfLE(x, y', e1, e2) | IfGE(x, y', e1, e2) -> x :: fv_id_or_imm y' @ remove_and_uniq S.empty (fv e1 @ fv e2) (* uniq here just for efficiency *)

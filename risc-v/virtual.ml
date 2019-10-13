@@ -37,7 +37,7 @@ let expand xts ini addf addi =
 let rec g env = function (* 式の仮想マシンコード生成 (caml2html: virtual_g) *)
   | Closure.Unit -> Ans(Nop)
   | Closure.Int(i) -> Ans(Set(i))
-  | Closure.Float(d) ->
+  | Closure.Float(d) -> (*todo: テーブルを使わないでfloatを入れる*)
       let l =
         try
           (* すでに定数テーブルにあったら再利用 *)
@@ -48,7 +48,7 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
           data := (l, d) :: !data;
           l in
       let x = Id.genid "l" in
-      Let((x, Type.Int), SetL(l), Ans(LdDF(x, C(0))))
+      Let((x, Type.Int), SetL(l), Ans(LdDF(x, C(0)))) 
   | Closure.Neg(x) -> Ans(Neg(x))
   | Closure.Add(x, y) -> Ans(Add(x, V(y)))
   | Closure.Sub(x, y) -> Ans(Sub(x, V(y)))
@@ -60,9 +60,9 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
   | Closure.IfEq(x, y, e1, e2) ->
       (match M.find x env with
       | Type.Bool | Type.Int -> Ans(IfEq(x, V(y), g env e1, g env e2))
-      | Type.Float -> Ans(IfFEq(x, y, g env e1, g env e2))
+      | Type.Float -> Ans(IfFEq(x, y, g env e1, g env e2)) (*ifでfloatの時はfloatでequalかを判定するモジュールが必要か*)
       | _ -> failwith "equality supported only for bool, int, and float")
-  | Closure.IfLE(x, y, e1, e2) ->
+  | Closure.IfLE(x, y, e1, e2) -> (*上に同じ*)
       (match M.find x env with
       | Type.Bool | Type.Int -> Ans(IfLE(x, V(y), g env e1, g env e2))
       | Type.Float -> Ans(IfFLE(x, y, g env e1, g env e2))
@@ -106,7 +106,7 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
           (fun x offset store -> seq(StDF(x, y, C(offset)), store))
           (fun x _ offset store -> seq(St(x, y, C(offset)), store)) in
       Let((y, Type.Tuple(List.map (fun x -> M.find x env) xs)), Mov(reg_hp),
-          Let((reg_hp, Type.Int), Add(reg_hp, C(align offset)),
+          Let((reg_hp, Type.Int), Add(reg_hp, C(align offset)), (*ここら辺のalignを消す必要性*)
               store))
   | Closure.LetTuple(xts, y, e2) ->
       let s = Closure.fv e2 in
@@ -126,7 +126,7 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
       (match M.find x env with
       | Type.Array(Type.Unit) -> Ans(Nop)
       | Type.Array(Type.Float) ->
-          Let((offset, Type.Int), SLL(y, C(3)),
+          Let((offset, Type.Int), SLL(y, C(3)), (*ここC(2)とかじゃなくて大丈夫か*)
               Ans(LdDF(x, V(offset))))
       | Type.Array(_) ->
           Let((offset, Type.Int), SLL(y, C(2)),
@@ -137,7 +137,7 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
       (match M.find x env with
       | Type.Array(Type.Unit) -> Ans(Nop)
       | Type.Array(Type.Float) ->
-          Let((offset, Type.Int), SLL(y, C(3)),
+          Let((offset, Type.Int), SLL(y, C(3)), (*ここも大丈夫か*)
               Ans(StDF(z, x, V(offset))))
       | Type.Array(_) ->
           Let((offset, Type.Int), SLL(y, C(2)),

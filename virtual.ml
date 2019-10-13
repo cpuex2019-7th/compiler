@@ -1,1 +1,1 @@
-x86/virtual.ml
+risc-v/virtual.ml

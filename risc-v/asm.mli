@@ -12,6 +12,7 @@ and exp =
   | Mov of Id.t
   | Neg of Id.t
   | Add of Id.t * id_or_imm
+  | Addi of Id.t * id_or_imm
   | Sub of Id.t * id_or_imm
   | SLL of Id.t * id_or_imm
   | Ld of Id.t * id_or_imm
@@ -49,9 +50,11 @@ val allfregs : Id.t list
 val reg_cl : Id.t
 val reg_sw : Id.t
 val reg_fsw : Id.t
-val reg_ra : Id.t
-val reg_hp : Id.t
+val reg_z : Id.t
 val reg_sp : Id.t
+val reg_hp : Id.t
+val reg_ra : Id.t
+val reg_fz : Id.t
 val is_reg : Id.t -> bool
 val co_freg : Id.t -> Id.t
 

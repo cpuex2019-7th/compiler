@@ -1,1 +1,1 @@
-x86/libmincaml.S
+risc-v/libmincaml.S

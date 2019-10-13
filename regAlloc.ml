@@ -1,1 +1,1 @@
-x86/regAlloc.ml
+risc-v/regAlloc.ml

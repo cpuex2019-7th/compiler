@@ -1,1 +1,1 @@
-x86/globals.s
+risc-v/globals.s
