@@ -23,3 +23,6 @@ read_actual:
 	jalr x0, x1, 0            ; return to caller
 min_caml_print_int:
 	jalr x0, x1, 0
+min_caml_print_float:
+	fmvxw x10, f1
+	jalr x0, x1, 0	

@@ -36,7 +36,7 @@ inprod inprod-rec inprod-loop matmul matmul-flat \
 manyargs
 
 # ↓risc-v用のテストファイル
-RISCVTESTS = fib
+RISCVTESTS = fib fibf
 
 do_test: $(TESTS:%=test/%.cmp)
 

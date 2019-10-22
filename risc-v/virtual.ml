@@ -7,6 +7,8 @@ open Asm
 
 let data = ref [] (* 浮動小数点数の定数テーブル (caml2html: virtual_data) *)
 
+external getfl : float -> int32 = "getfl"         
+
 let classify xts ini addf addi =
   List.fold_left
     (fun acc (x, t) ->
@@ -38,7 +40,10 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
   | Closure.Unit -> Ans(Nop)
   | Closure.Int(i) -> Ans(Set(i))
   | Closure.Float(d) -> (*todo: テーブルを使わないでfloatを入れる*)
-      let l =
+     let i = Id.genid "i" in
+     let f = Id.L(Int32.to_string(getfl d)) in (*todo: 16進数表記*)
+     Let((i, Type.Int), SetLi(f), Ans(Fmv(i)))
+(*      let l =
         try
           (* すでに定数テーブルにあったら再利用 *)
           let (l, _) = List.find (fun (_, d') -> d = d') !data in
@@ -48,7 +53,7 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
           data := (l, d) :: !data;
           l in
       let x = Id.genid "l" in
-      Let((x, Type.Int), SetL(l), Ans(LdDF(x, C(0)))) 
+      Let((x, Type.Int), SetL(l), Ans(LdDF(x, C(0)))) *)
   | Closure.Neg(x) -> Ans(Neg(x))
   | Closure.Add(x, y) -> Ans(Add(x, V(y)))
   | Closure.Sub(x, y) -> Ans(Sub(x, V(y)))
@@ -60,12 +65,16 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
   | Closure.IfEq(x, y, e1, e2) ->
       (match M.find x env with
       | Type.Bool | Type.Int -> Ans(IfEq(x, V(y), g env e1, g env e2))
-      | Type.Float -> Ans(IfFEq(x, y, g env e1, g env e2)) (*ifでfloatの時はfloatでequalかを判定するモジュールが必要か*)
+      | Type.Float ->
+         let z = Id.genid "i" in
+         Let((z, Type.Int), Feq(x, y), Ans(IfEq(z, V("x0"), g env e2, g env e1)))
       | _ -> failwith "equality supported only for bool, int, and float")
   | Closure.IfLE(x, y, e1, e2) -> (*上に同じ*)
       (match M.find x env with
       | Type.Bool | Type.Int -> Ans(IfLE(x, V(y), g env e1, g env e2))
-      | Type.Float -> Ans(IfFLE(x, y, g env e1, g env e2))
+      | Type.Float ->
+         let z = Id.genid "i" in
+         Let((z, Type.Int), Fle(x, y), Ans(IfEq(z, V("x0"), g env e2, g env e1)))
       | _ -> failwith "inequality supported only for bool, int, and float")
   | Closure.Let((x, t1), e1, e2) ->
       let e1' = g env e1 in

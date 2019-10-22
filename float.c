@@ -8,6 +8,17 @@ typedef union {
   double d;
 } dbl;
 
+typedef union {
+  int32_t i;
+  float f;
+} flt;
+
+value getfl(value v) {
+  flt d;
+  d.f = Double_val(v);
+  return copy_int32(d.i);
+}
+
 value gethi(value v) {
   dbl d;
   d.d = Double_val(v);

@@ -10,6 +10,8 @@ and exp = (* 一つ一つの命令に対応する式 (caml2html: sparcasm_exp) *
   | Nop
   | Set of int
   | SetL of Id.l
+  | SetLi of Id.l
+  | Fmv of Id.t
   | Mov of Id.t
   | Neg of Id.t
   | Add of Id.t * id_or_imm
@@ -24,6 +26,8 @@ and exp = (* 一つ一つの命令に対応する式 (caml2html: sparcasm_exp) *
   | FSubD of Id.t * Id.t
   | FMulD of Id.t * Id.t
   | FDivD of Id.t * Id.t
+  | Feq of Id.t * Id.t
+  | Fle of Id.t * Id.t
   | LdDF of Id.t * id_or_imm
   | StDF of Id.t * Id.t * id_or_imm
   | Comment of string
@@ -31,8 +35,8 @@ and exp = (* 一つ一つの命令に対応する式 (caml2html: sparcasm_exp) *
   | IfEq of Id.t * id_or_imm * t * t
   | IfLE of Id.t * id_or_imm * t * t
   | IfGE of Id.t * id_or_imm * t * t (* 左右対称ではないので必要 *)
-  | IfFEq of Id.t * Id.t * t * t
-  | IfFLE of Id.t * Id.t * t * t
+(*  | IfFEq of Id.t * Id.t * t * t
+  | IfFLE of Id.t * Id.t * t * t *)
   (* closure address, integer arguments, and float arguments *)
   | CallCls of Id.t * Id.t list * Id.t list
   | CallDir of Id.l * Id.t list * Id.t list
@@ -46,8 +50,8 @@ let fletd(x, e1, e2) = Let((x, Type.Float), e1, e2)
 let seq(e1, e2) = Let((Id.gentmp Type.Unit, Type.Unit), e1, e2)
 
 let regs = (* Array.init 16 (fun i -> Printf.sprintf "%%r%d" i) *)
-  [| "x4"; "x5"; "x6"; "x7"; "x8"; "x9";
-     "x10"; "x11"; "x12"; "x13"; "x14"; "x15"; "x16"; "x17";
+  [| "x10"; "x5"; "x6"; "x7"; "x8"; "x9";
+     "x4"; "x11"; "x12"; "x13"; "x14"; "x15"; "x16"; "x17";
      "x18"; "x19"; "x20"; "x21"; "x22"; "x23"; "x24"; "x25"; "x26"; "x27";
      "x28"; "x29"; "x30"; "x31" |]
 let fregs = Array.init 31 (fun i -> Printf.sprintf "f%d" (i+1))
@@ -63,7 +67,7 @@ let reg_ra = "x1" (* return address *)
 let reg_fz = "f0"           (*zero register for floating point*)
 let is_reg x = (x.[0] = 'x' || x.[0] = 'f')
 
-             
+(*             
 let co_freg_table =
   let ht = Hashtbl.create 16 in
   for i = 0 to 15 do
@@ -74,7 +78,7 @@ let co_freg_table =
   done;
   ht
 let co_freg freg = Hashtbl.find co_freg_table freg (* "companion" freg *)
-
+ *)
              
 (* super-tenuki *)
 let rec remove_and_uniq xs = function
@@ -85,13 +89,13 @@ let rec remove_and_uniq xs = function
 (* free variables in the order of use (for spilling) (caml2html: sparcasm_fv) *)
 let fv_id_or_imm = function V(x) -> [x] | _ -> []
 let rec fv_exp = function
-  | Nop | Set(_) | SetL(_) | Comment(_) | Restore(_) -> []
-  | Mov(x) | Neg(x) | FMovD(x) | FNegD(x) | Save(x, _) -> [x]
+  | Nop | Set(_) | SetL(_) | SetLi(_) | Comment(_) | Restore(_) -> []
+  | Fmv(x) | Mov(x) | Neg(x) | FMovD(x) | FNegD(x) | Save(x, _) -> [x]
   | Add(x, y') | Addi(x, y') | Sub(x, y') | SLL(x, y') | Ld(x, y') | LdDF(x, y') -> x :: fv_id_or_imm y'
   | St(x, y, z') | StDF(x, y, z') -> x :: y :: fv_id_or_imm z'
-  | FAddD(x, y) | FSubD(x, y) | FMulD(x, y) | FDivD(x, y) -> [x; y]
+  | FAddD(x, y) | FSubD(x, y) | FMulD(x, y) | FDivD(x, y) | Feq(x, y) | Fle(x, y) -> [x; y]
   | IfEq(x, y', e1, e2) | IfLE(x, y', e1, e2) | IfGE(x, y', e1, e2) -> x :: fv_id_or_imm y' @ remove_and_uniq S.empty (fv e1 @ fv e2) (* uniq here just for efficiency *)
-  | IfFEq(x, y, e1, e2) | IfFLE(x, y, e1, e2) -> x :: y :: remove_and_uniq S.empty (fv e1 @ fv e2) (* uniq here just for efficiency *)
+  (*  | IfFEq(x, y, e1, e2) | IfFLE(x, y, e1, e2) -> x :: y :: remove_and_uniq S.empty (fv e1 @ fv e2) (* uniq here just for efficiency *) *)
   | CallCls(x, ys, zs) -> x :: ys @ zs
   | CallDir(_, ys, zs) -> ys @ zs
 and fv = function

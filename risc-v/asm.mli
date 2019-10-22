@@ -9,6 +9,8 @@ and exp =
   | Nop
   | Set of int
   | SetL of Id.l
+  | SetLi of Id.l
+  | Fmv of Id.t
   | Mov of Id.t
   | Neg of Id.t
   | Add of Id.t * id_or_imm
@@ -23,6 +25,8 @@ and exp =
   | FSubD of Id.t * Id.t
   | FMulD of Id.t * Id.t
   | FDivD of Id.t * Id.t
+  | Feq of Id.t * Id.t
+  | Fle of Id.t * Id.t
   | LdDF of Id.t * id_or_imm
   | StDF of Id.t * Id.t * id_or_imm
   | Comment of string
@@ -30,8 +34,8 @@ and exp =
   | IfEq of Id.t * id_or_imm * t * t
   | IfLE of Id.t * id_or_imm * t * t
   | IfGE of Id.t * id_or_imm * t * t
-  | IfFEq of Id.t * Id.t * t * t
-  | IfFLE of Id.t * Id.t * t * t
+(*  | IfFEq of Id.t * Id.t * t * t
+  | IfFLE of Id.t * Id.t * t * t *)
   (* closure address, integer arguments, and float arguments *)
   | CallCls of Id.t * Id.t list * Id.t list
   | CallDir of Id.l * Id.t list * Id.t list
@@ -56,7 +60,7 @@ val reg_hp : Id.t
 val reg_ra : Id.t
 val reg_fz : Id.t
 val is_reg : Id.t -> bool
-val co_freg : Id.t -> Id.t
+(*val co_freg : Id.t -> Id.t*)
 
 val fv : t -> Id.t list
 val concat : t -> Id.t * Type.t -> t -> t
