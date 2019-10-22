@@ -172,33 +172,33 @@ and g' oc = function (* 各命令のアセンブリ生成 (caml2html: emit_gprim
   (* 関数呼び出しの仮想命令の実装 (caml2html: emit_call) *)
   | Tail, CallCls(x, ys, zs) -> (* 末尾呼び出し (caml2html: emit_tailcall) *)
      g'_args oc [(x, reg_cl)] ys zs;
-     Printf.fprintf oc "\tlw\t%s, %s, 0 \n" reg_sw reg_cl;
-     Printf.fprintf oc "\tjalr\t%s, %s, 0\n" reg_z reg_sw
+     Printf.fprintf oc "\tlw\t%s, %s, 0 ; tail call closure routine\n" reg_sw reg_cl;
+     Printf.fprintf oc "\tjalr\t%s, %s, 0 ; tail call closure routine\n" reg_z reg_sw
   | Tail, CallDir(Id.L(x), ys, zs) -> (* 末尾呼び出し *)
      g'_args oc [] ys zs;
-     Printf.fprintf oc "\tjal\t%s, %s\n" reg_z x
+     Printf.fprintf oc "\tjal\t%s, %s ; tail call directly routine\n" reg_z x
   | NonTail(a), CallCls(x, ys, zs) -> (*closureを用いた関数呼び出し*)
       g'_args oc [(x, reg_cl)] ys zs;
       let ss = stacksize () in
-      Printf.fprintf oc "\tsw\t%s, %s, %d\n" reg_ra reg_sp (ss - 4);
+      Printf.fprintf oc "\tsw\t%s, %s, %d ; nontail call closure routine starts\n" reg_ra reg_sp (ss - 4);
       Printf.fprintf oc "\tlw\t%s, %s, 0\n" reg_sw reg_cl;
       Printf.fprintf oc "\taddi\t%s, %s, %d\n" reg_sp reg_sp ss; (*スタックポインタをスタックサイズ分進める*)
       Printf.fprintf oc "\tjalr\t%s, %s, 0\n" reg_ra reg_sw; (*reg_swの場所に飛ぶ*)
       Printf.fprintf oc "\taddi\t%s, %s, -%d\n" reg_sp reg_sp ss; (*スタックポインタを元の場所に戻す*)
-      Printf.fprintf oc "\tlw\t%s, %s, %d\n" reg_ra reg_sp (ss - 4); (*戻りアドレスをセットしなおす*)
+      Printf.fprintf oc "\tlw\t%s, %s, %d \n" reg_ra reg_sp (ss - 4); (*戻りアドレスをセットしなおす*)
 (*      Printf.fprintf oc "\tcall\t%s\n" reg_sw;
       Printf.fprintf oc "\tadd\t%s, %d, %s\t! delay slot\n" reg_sp ss reg_sp;
       Printf.fprintf oc "\tsub\t%s, %d, %s\n" reg_sp ss reg_sp;
       Printf.fprintf oc "\tld\t[%s + %d], %s\n" reg_sp (ss - 4) reg_ra; *)
       if List.mem a allregs && a <> regs.(0) then
-        Printf.fprintf oc "\tadd\t%s, %s, %s" a regs.(0) reg_z
+        Printf.fprintf oc "\tadd\t%s, %s, %s ; nontail call closure routine ends\n" a regs.(0) reg_z
       else if List.mem a allfregs && a <> fregs.(0) then (*一旦飛ばす*)
         (Printf.fprintf oc "\tfmovs\t%s, %s\n" fregs.(0) a;
          Printf.fprintf oc "\tfmovs\t%s, %s\n" (co_freg fregs.(0)) (co_freg a))
   | NonTail(a), CallDir(Id.L(x), ys, zs) -> (*closureを用いない関数呼び出し*)
       g'_args oc [] ys zs;
       let ss = stacksize () in
-      Printf.fprintf oc "\tsw\t%s, %s, %d\n" reg_ra reg_sp (ss - 4);
+      Printf.fprintf oc "\tsw\t%s, %s, %d ; nontail call directly starts\n" reg_ra reg_sp (ss - 4);
       Printf.fprintf oc "\taddi\t%s, %s, %d\n" reg_sp reg_sp ss;
       Printf.fprintf oc "\tjal\t%s, %s\n" reg_ra x;
       Printf.fprintf oc "\taddi\t%s, %s, -%d\n" reg_sp reg_sp ss;
@@ -210,13 +210,13 @@ and g' oc = function (* 各命令のアセンブリ生成 (caml2html: emit_gprim
       Printf.fprintf oc "\tsub\t%s, %d, %s\n" reg_sp ss reg_sp;
       Printf.fprintf oc "\tld\t[%s + %d], %s\n" reg_sp (ss - 4) reg_ra; *)
       if List.mem a allregs && a <> regs.(0) then
-        Printf.fprintf oc "\tadd\t%s, %s, %s\n" a regs.(0) reg_z
+        Printf.fprintf oc "\tadd\t%s, %s, %s ; nontail call directly ends\n" a regs.(0) reg_z
       else if List.mem a allfregs && a <> fregs.(0) then (*一旦飛ばす*)
         (Printf.fprintf oc "\tfmovs\t%s, %s\n" fregs.(0) a;
          Printf.fprintf oc "\tfmovs\t%s, %s\n" (co_freg fregs.(0)) (co_freg a))
 and g'_tail_if oc e1 e2 b bn x y=
   let b_else = Id.genid (b ^ "_else") in
-  Printf.fprintf oc "\t%s\t%s, %s, %s\n" bn x y b_else;
+  Printf.fprintf oc "\t%s\t%s, %s, %s ; tail if\n" bn x y b_else;
   let stackset_back = !stackset in
   g oc (Tail, e1);
   Printf.fprintf oc "%s:\n" b_else;
@@ -225,11 +225,11 @@ and g'_tail_if oc e1 e2 b bn x y=
 and g'_non_tail_if oc dest e1 e2 b bn x y=
   let b_else = Id.genid (b ^ "_else") in
   let b_cont = Id.genid (b ^ "_cont") in
-  Printf.fprintf oc "\t%s\t%s, %s, %s\n" bn x y b_else;
+  Printf.fprintf oc "\t%s\t%s, %s, %s ; nontail if\n" bn x y b_else;
   let stackset_back = !stackset in
   g oc (dest, e1);
   let stackset1 = !stackset in
-  Printf.fprintf oc "\tjal\t%s, %s\n" reg_z b_cont; (*戻りアドレスは必要ない*)
+  Printf.fprintf oc "\tjal\t%s, %s ; then sentence ends\n" reg_z b_cont; (*戻りアドレスは必要ない*)
   Printf.fprintf oc "%s:\n" b_else;
   stackset := stackset_back;
   g oc (dest, e2);
@@ -243,7 +243,7 @@ and g'_args oc x_reg_cl ys zs =
       (0, x_reg_cl)
       ys in
   List.iter
-    (fun (y, r) -> Printf.fprintf oc "\tadd\t%s, %s, %s\n" r y reg_z(*Printf.fprintf oc "\tmov\t%s, %s\n" y r*))
+    (fun (y, r) -> Printf.fprintf oc "\tadd\t%s, %s, %s ; args\n" r y reg_z(*Printf.fprintf oc "\tmov\t%s, %s\n" y r*))
     (shuffle reg_sw yrs);
   let (d, zfrs) =
     List.fold_left
@@ -279,7 +279,9 @@ let f oc (Prog(data, fundefs, e)) =
   stackmap := [];
   Printf.fprintf oc "min_caml_start:\n"; 
   g oc (NonTail("x0"), e);
+  Printf.fprintf oc "\tadd\tx10, x4, x0 ; set output to a0 register\n"; (*デバッグ結果をx10に出力する*)
   Printf.fprintf oc "\tjalr\tx0, x1, 0\n";
+  
   List.iter (fun fundef -> h oc fundef) fundefs
 (*  Printf.fprintf oc ".global\tmin_caml_start\n";
   Printf.fprintf oc "min_caml_start:\n"; *)

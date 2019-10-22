@@ -9,7 +9,7 @@ CC = gcc
 CFLAGS = -g -O2 -Wall
 OCAMLLDFLAGS=-warn-error -31
 
-default: debug-code top $(RESULT) do_test
+default: debug-code top $(RESULT) riscv_test
 $(RESULT): debug-code top
 ## [自分（住井）用の注]
 ## ・OCamlMakefileや古いGNU Makeのバグ(?)で上のような定義が必要(??)
@@ -35,6 +35,9 @@ join-reg join-reg2 non-tail-if non-tail-if2 \
 inprod inprod-rec inprod-loop matmul matmul-flat \
 manyargs
 
+# ↓risc-v用のテストファイル
+RISCVTESTS = fib
+
 do_test: $(TESTS:%=test/%.cmp)
 
 .PRECIOUS: test/%.s test/% test/%.res test/%.ans test/%.cmp
@@ -50,6 +53,27 @@ test/%.ans: test/%.ml
 	ocaml $< > $@
 test/%.cmp: test/%.res test/%.ans
 	diff $^ > $@
+
+
+ASM = cpuex_asm
+SIMULATOR = cpuex_sim
+
+riscv_test: $(RISCVTESTS:%=riscv-test/%.cmp)
+
+.PRECIOUS: riscv-test/%.s riscv-test/% riscv-test/%.res riscv-test/%.ans riscv-test/%.cmp
+TRASH = $(RISCVTESTS:%=riscv-test/%.s) $(RISCVTESTS:%=riscv-test/%) $(RISCVTESTS:%=riscv-test/%.res) $(RISCVTESTS:%=riscv-test/%.ans) $(RISCVTESTS:%=riscv-test/%.cmp)
+
+riscv-test/%.s: $(RESULT) riscv-test/%.ml
+	./$(RESULT) riscv-test/$*
+riscv-test/%: riscv-test/%.s libmincaml.S 
+	$(ASM) $@ $^
+riscv-test/%.res: riscv-test/%
+	$(SIMULATOR) $< > $@
+riscv-test/%.ans: riscv-test/%.ml
+	ocaml $< > $@
+riscv-test/%.cmp: riscv-test/%.res riscv-test/%.ans
+	diff $^ > $@
+
 
 min-caml.html: main.mli main.ml id.ml m.ml s.ml \
 		syntax.ml type.ml parser.mly lexer.mll typing.mli typing.ml kNormal.mli kNormal.ml \
