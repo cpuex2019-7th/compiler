@@ -36,7 +36,9 @@ inprod inprod-rec inprod-loop matmul matmul-flat \
 manyargs
 
 # ↓risc-v用のテストファイル
-RISCVTESTS = fib fibf
+RISCVTESTSINT = fib 
+
+RISCVTESTSFLOAT = fibf
 
 do_test: $(TESTS:%=test/%.cmp)
 
@@ -58,17 +60,19 @@ test/%.cmp: test/%.res test/%.ans
 ASM = cpuex_asm
 SIMULATOR = cpuex_sim
 
-riscv_test: $(RISCVTESTS:%=riscv-test/%.cmp)
+riscv_test: $(RISCVTESTSINT:%=riscv-test/%.cmp) $(RISCVTESTSFLOAT:%=riscv-test/%.cmp) 
 
 .PRECIOUS: riscv-test/%.s riscv-test/% riscv-test/%.res riscv-test/%.ans riscv-test/%.cmp
-TRASH = $(RISCVTESTS:%=riscv-test/%.s) $(RISCVTESTS:%=riscv-test/%) $(RISCVTESTS:%=riscv-test/%.res) $(RISCVTESTS:%=riscv-test/%.ans) $(RISCVTESTS:%=riscv-test/%.cmp)
+TRASH = $(RISCVTESTSINT:%=riscv-test/%.s) $(RISCVTESTSINT:%=riscv-test/%) $(RISCVTESTSINT:%=riscv-test/%.res) $(RISCVTESTSINT:%=riscv-test/%.ans) $(RISCVTESTSINT:%=riscv-test/%.cmp) $(RISCVTESTSFLOAT:%=riscv-test/%.s) $(RISCVTESTSFLOAT:%=riscv-test/%) $(RISCVTESTSFLOAT:%=riscv-test/%.res) $(RISCVTESTSFLOAT:%=riscv-test/%.ans) $(RISCVTESTSFLOAT:%=riscv-test/%.cmp)
 
 riscv-test/%.s: $(RESULT) riscv-test/%.ml
 	./$(RESULT) riscv-test/$*
 riscv-test/%: riscv-test/%.s libmincaml.S 
 	$(ASM) $@ $^
-riscv-test/%.res: riscv-test/%
-	$(SIMULATOR) $< > $@
+$(RISCVTESTSFLOAT:%=riscv-test/%.res): $(RISCVTESTSFLOAT:%=riscv-test/%)
+	$(SIMULATOR) $< | cpuex_d2f > $@
+$(RISCVTESTSINT:%=riscv-test/%.res): $(RISCVTESTSINT:%=riscv-test/%)
+	$(SIMULATOR) $< > $@ 
 riscv-test/%.ans: riscv-test/%.ml
 	ocaml $< > $@
 riscv-test/%.cmp: riscv-test/%.res riscv-test/%.ans
