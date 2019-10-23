@@ -1,13 +1,3 @@
-min_caml_start:
-    fmvwx    f0, x0
-    addi    x10, x0, -10
-    sw    x1, x2, 4 ; nontail call directly starts
-    addi    x2, x2, 8
-    jal    x1, min_caml_print_int
-    addi    x2, x2, -8
-    lw    x1, x2, 4
-    jalr    x0, x1, 0
-    
 ;;; UART Write
 write:
     sw x5, sp, 0
@@ -82,7 +72,7 @@ be_else.47:
     jal    x0, bge_cont.49
 bge_else.48:
     addi    x5, x0, 1
-bge_cont.49:
+bge_conot.49:
     addi    x6, x0, 0
     blt    x10, x6, bge_else.50
     jal    x0, bge_cont.51
