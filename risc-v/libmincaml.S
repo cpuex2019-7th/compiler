@@ -72,7 +72,7 @@ be_else.47:
     jal    x0, bge_cont.49
 bge_else.48:
     addi    x5, x0, 1
-bge_conot.49:
+bge_cont.49:
     addi    x6, x0, 0
     blt    x10, x6, bge_else.50
     jal    x0, bge_cont.51
