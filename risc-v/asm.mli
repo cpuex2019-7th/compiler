@@ -60,6 +60,7 @@ val reg_hp : Id.t
 val reg_ra : Id.t
 val reg_fz : Id.t
 val is_reg : Id.t -> bool
+val rename_reg : Id.t -> Id.t  
 (*val co_freg : Id.t -> Id.t*)
 
 val fv : t -> Id.t list

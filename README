@@ -55,3 +55,9 @@ included in this distribution.
 
 - The register allocator now uses a simpler algorithm.  It omits the
   backtracking (ToSpill and NoSpill) in previous versions.
+
+
+追記
+./to_riscvでriscv対応
+make byte-codeでmin-camlファイルができる。
+make riscv_testでテストの実行

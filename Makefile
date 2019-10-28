@@ -36,7 +36,8 @@ inprod inprod-rec inprod-loop matmul matmul-flat \
 manyargs
 
 # ↓risc-v用のテストファイル
-RISCVTESTSINT = fib 
+RISCVTESTSINT = fib ack adder cls-bug cls-rec cls-reg-bug funcomp gcd join-reg join-reg2 \
+join-stack join-stack2 join-stack3 spill spill2 spill3 sum-tail sum
 
 RISCVTESTSFLOAT = fibf
 

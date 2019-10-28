@@ -32,7 +32,7 @@ let expand xts ini addf addi =
     ini
     (fun (offset, acc) x ->
       let offset = align offset in
-      (offset + 8, addf x offset acc))
+      (offset + 4, addf x offset acc))
     (fun (offset, acc) x t ->
       (offset + 4, addi x t offset acc))
 
@@ -67,14 +67,14 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
       | Type.Bool | Type.Int -> Ans(IfEq(x, V(y), g env e1, g env e2))
       | Type.Float ->
          let z = Id.genid "i" in
-         Let((z, Type.Int), Feq(x, y), Ans(IfEq(z, V("x0"), g env e2, g env e1)))
+         Let((z, Type.Int), Feq(x, y), Ans(IfEq(z, V("%x0"), g env e2, g env e1)))
       | _ -> failwith "equality supported only for bool, int, and float")
   | Closure.IfLE(x, y, e1, e2) -> (*上に同じ*)
       (match M.find x env with
       | Type.Bool | Type.Int -> Ans(IfLE(x, V(y), g env e1, g env e2))
       | Type.Float ->
          let z = Id.genid "i" in
-         Let((z, Type.Int), Fle(x, y), Ans(IfEq(z, V("x0"), g env e2, g env e1)))
+         Let((z, Type.Int), Fle(x, y), Ans(IfEq(z, V("%x0"), g env e2, g env e1)))
       | _ -> failwith "inequality supported only for bool, int, and float")
   | Closure.Let((x, t1), e1, e2) ->
       let e1' = g env e1 in
@@ -95,7 +95,7 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
           (fun y offset store_fv -> seq(StDF(y, x, C(offset)), store_fv))
           (fun y _ offset store_fv -> seq(St(y, x, C(offset)), store_fv)) in
       Let((x, t), Mov(reg_hp),
-          Let((reg_hp, Type.Int), Add(reg_hp, C(align offset)),
+          Let((reg_hp, Type.Int), Addi(reg_hp, C(align offset)),
               let z = Id.genid "l" in
               Let((z, Type.Int), SetL(l),
                   seq(St(z, x, C(0)),
