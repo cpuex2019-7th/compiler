@@ -25,7 +25,8 @@ alpha.mli alpha.ml beta.mli beta.ml assoc.mli assoc.ml \
 inline.mli inline.ml constFold.mli constFold.ml elim.mli elim.ml \
 closure.mli closure.ml asm.mli asm.ml virtual.mli virtual.ml \
 simm.mli simm.ml regAlloc.mli regAlloc.ml emit.mli emit.ml \
-main.mli main.ml
+joinglb.ml joinglb.mli \
+main.mli main.ml 
 
 # ↓テストプログラムが増えたら、これも増やす
 TESTS = print sum-tail gcd sum fib ack even-odd \
@@ -39,7 +40,7 @@ manyargs
 RISCVTESTSINT = fib ack adder cls-bug cls-rec cls-reg-bug funcomp gcd join-reg join-reg2 \
 join-stack join-stack2 join-stack3 spill spill2 spill3 sum-tail sum
 
-RISCVTESTSFLOAT = fibf
+#RISCVTESTSFLOAT = fibf
 
 do_test: $(TESTS:%=test/%.cmp)
 
@@ -61,19 +62,19 @@ test/%.cmp: test/%.res test/%.ans
 ASM = cpuex_asm
 SIMULATOR = cpuex_sim
 
-riscv_test: $(RISCVTESTSINT:%=riscv-test/%.cmp) $(RISCVTESTSFLOAT:%=riscv-test/%.cmp) 
+riscv_test: $(RISCVTESTSINT:%=riscv-test/%.cmp) #$(RISCVTESTSFLOAT:%=riscv-test/%.cmp) 
 
 .PRECIOUS: riscv-test/%.s riscv-test/% riscv-test/%.res riscv-test/%.ans riscv-test/%.cmp
-TRASH = $(RISCVTESTSINT:%=riscv-test/%.s) $(RISCVTESTSINT:%=riscv-test/%) $(RISCVTESTSINT:%=riscv-test/%.res) $(RISCVTESTSINT:%=riscv-test/%.ans) $(RISCVTESTSINT:%=riscv-test/%.cmp) $(RISCVTESTSFLOAT:%=riscv-test/%.s) $(RISCVTESTSFLOAT:%=riscv-test/%) $(RISCVTESTSFLOAT:%=riscv-test/%.res) $(RISCVTESTSFLOAT:%=riscv-test/%.ans) $(RISCVTESTSFLOAT:%=riscv-test/%.cmp)
+TRASH = $(RISCVTESTSINT:%=riscv-test/%.s) $(RISCVTESTSINT:%=riscv-test/%) $(RISCVTESTSINT:%=riscv-test/%.res) $(RISCVTESTSINT:%=riscv-test/%.ans) $(RISCVTESTSINT:%=riscv-test/%.cmp) #$(RISCVTESTSFLOAT:%=riscv-test/%.s) $(RISCVTESTSFLOAT:%=riscv-test/%) $(RISCVTESTSFLOAT:%=riscv-test/%.res) $(RISCVTESTSFLOAT:%=riscv-test/%.ans) $(RISCVTESTSFLOAT:%=riscv-test/%.cmp)
 
 riscv-test/%.s: $(RESULT) riscv-test/%.ml
 	./$(RESULT) riscv-test/$*
 riscv-test/%: riscv-test/%.s libmincaml.S 
 	$(ASM) $@ $^
-$(RISCVTESTSFLOAT:%=riscv-test/%.res): $(RISCVTESTSFLOAT:%=riscv-test/%)
-	$(SIMULATOR) $< | cpuex_d2f > $@
-$(RISCVTESTSINT:%=riscv-test/%.res): $(RISCVTESTSINT:%=riscv-test/%)
-	$(SIMULATOR) $< > $@ 
+#$(RISCVTESTSFLOAT:%=riscv-test/%.res): $(RISCVTESTSFLOAT:%=riscv-test/%)
+#	$(SIMULATOR) $< | cpuex_d2f > $@
+riscv-test/%.res: riscv-test/%
+	$(SIMULATOR) $< -o $@
 riscv-test/%.ans: riscv-test/%.ml
 	ocaml $< > $@
 riscv-test/%.cmp: riscv-test/%.res riscv-test/%.ans

@@ -57,6 +57,8 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
   | Closure.Neg(x) -> Ans(Neg(x))
   | Closure.Add(x, y) -> Ans(Add(x, V(y)))
   | Closure.Sub(x, y) -> Ans(Sub(x, V(y)))
+  | Closure.Mul(x, y) -> Ans(Mul(x, V(y)))
+  | Closure.Div(x, y) -> Ans(Mul(x, V(y)))
   | Closure.FNeg(x) -> Ans(FNegD(x))
   | Closure.FAdd(x, y) -> Ans(FAddD(x, y))
   | Closure.FSub(x, y) -> Ans(FSubD(x, y))
@@ -115,7 +117,7 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
           (fun x offset store -> seq(StDF(x, y, C(offset)), store))
           (fun x _ offset store -> seq(St(x, y, C(offset)), store)) in
       Let((y, Type.Tuple(List.map (fun x -> M.find x env) xs)), Mov(reg_hp),
-          Let((reg_hp, Type.Int), Add(reg_hp, C(align offset)), (*ここら辺のalignを消す必要性*)
+          Let((reg_hp, Type.Int), Addi(reg_hp, C(align offset)), (*ここら辺のalignを消す必要性*)
               store))
   | Closure.LetTuple(xts, y, e2) ->
       let s = Closure.fv e2 in

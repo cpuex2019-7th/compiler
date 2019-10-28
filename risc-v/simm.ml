@@ -5,7 +5,7 @@ open Asm
 
 let rec g env = function (* 命令列の13bit即値最適化 (caml2html: simm13_g) *)
   | Ans(exp) -> Ans(g' env exp)
-  | Let((x, t), Set(i), e) when -4096 <= i && i < 4096 -> (*todo: 即値は何bitか*)
+  | Let((x, t), Set(i), e) when -4096 <= i && i < 4096 -> (*todo: 即値は何bitか addiに入るかどうかをここで判定する*)
       (* Format.eprintf "found simm13 %s = %d@." x i; *)
       let e' = g (M.add x i env) e in
       if List.mem x (fv e') then Let((x, t), Set(i), e') else
@@ -15,7 +15,7 @@ let rec g env = function (* 命令列の13bit即値最適化 (caml2html: simm13_
       (* Format.eprintf "erased redundant SLL on %s@." x; *)
       g env (Let(xt, Set((M.find y env) lsl i), e))
   | Let(xt, exp, e) -> Let(xt, g' env exp, g env e)
-and g' env = function (* 各命令の13bit即値最適化 (caml2html: simm13_gprime) *)
+and g' env = function (* 各命令の13bit即値最適化 (caml2html: simm13_gprime) *) (*todo: 掛け算と割り算の最適化*)
   | Add(x, V(y)) when M.mem y env -> Addi(x, C(M.find y env))
   | Add(x, V(y)) when M.mem x env -> Addi(y, C(M.find x env))
   | Sub(x, V(y)) when M.mem y env -> Addi(x, C(-(M.find y env)))
