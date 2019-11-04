@@ -12,3 +12,7 @@ Basic usage is same as original min-caml compiler. (https://github.com/esumii/mi
 ```make riscv_test```
 ## Options
 * `-g` min-caml code is compiled with some library neccesary for raytracer program
+
+## Simulating raytracer program
+Raytracer program can be simulated by following code.(Assembler and simulater are neccessary)
+```./min-caml -g data/raytracer/minrt && cpuex_asm raytrace data/raytracer/minrt.s libmincaml.S && cpuex_sim raytrace -o output.ppm -i data/raytracer/sld/"target_object".sld```
