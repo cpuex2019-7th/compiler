@@ -490,6 +490,7 @@ let rec read_screen_settings _ =
   screen.(0) <- read_float ();
   screen.(1) <- read_float ();
   screen.(2) <- read_float ();
+  (*screenには0が入る!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)  
   (* 回転角 *)
   let v1 = rad (read_float ()) in
   let cos_v1 = cos v1 in
@@ -732,16 +733,19 @@ in
 (* 直方体の指定された面に衝突するかどうか判定する *)
 (* i0 : 面に垂直な軸のindex X:0, Y:1, Z:2         i2,i3は他の2軸のindex *)
 let rec solver_rect_surface m dirvec b0 b1 b2 i0 i1 i2  =
-  if fiszero dirvec.(i0) then false else
+  if fiszero dirvec.(i0) then false else  
   let abc = o_param_abc m in
   let d = fneg_cond (xor (o_isinvert m) (fisneg dirvec.(i0))) abc.(i0) in
 
   let d2 = (d -. b0) /. dirvec.(i0) in
-  if fless (fabs (d2 *. dirvec.(i1) +. b1)) abc.(i1) then
+  (*i1は0, 1, 2のどれか, *)
+( (*print_int (int_of_float abc.(i1));print_newline(); print_int (int_of_float (d2 *. dirvec.(i1) +. b1)); print_newline(); print_int i1; print_newline ();
+  print_int (int_of_float d2); print_int(int_of_float b1); print_newline ();*)
+  if fless (fabs (d2 *. dirvec.(i1) +. b1)) abc.(i1) then (*ここが毎回false!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
     if fless (fabs (d2 *. dirvec.(i2) +. b2)) abc.(i2) then
       (solver_dist.(0) <- d2; true)
     else false
-  else false
+  else false                                           )
 in
 
 
@@ -750,7 +754,7 @@ let rec solver_rect m dirvec b0 b1 b2 =
   if      solver_rect_surface m dirvec b0 b1 b2 0 1 2 then 1   (* YZ 平面 *)
   else if solver_rect_surface m dirvec b1 b2 b0 1 2 0 then 2   (* ZX 平面 *)
   else if solver_rect_surface m dirvec b2 b0 b1 2 0 1 then 3   (* XY 平面 *)
-  else                                                     0
+  else                                                     0 (*全部0!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
 in
 
 
@@ -836,13 +840,14 @@ let rec solver_second m dirvec b0 b1 b2 =
 in
 
 (**** solver のメインルーチン ****)
-let rec solver index dirvec org =
+let rec solver index dirvec org = (*返り値が常に0*)
   let m = objects.(index) in
   (* 直線の始点を物体の基準位置に合わせて平行移動 *)
   let b0 =  org.(0) -. o_param_x m in
   let b1 =  org.(1) -. o_param_y m in
   let b2 =  org.(2) -. o_param_z m in
   let m_shape = o_form m in
+  (*m_shapeは1か3!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
   (* 物体の種類に応じた補助関数を呼ぶ *)
   if m_shape = 1 then       solver_rect m dirvec b0 b1 b2    (* 直方体 *)
   else if m_shape = 2 then  solver_surface m dirvec b0 b1 b2 (* 平面 *)
@@ -1273,23 +1278,25 @@ let rec solve_each_element iand_ofs and_group dirvec =
   let iobj = and_group.(iand_ofs) in
   if iobj = -1 then ()
   else (
-    let t0 = solver iobj dirvec startp in
+    let t0 = solver iobj dirvec startp in (*t0が常に0!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
     if t0 <> 0 then
       (
        (* 交点がある時は、その交点が他の要素の中に含まれるかどうか調べる。*)
        (* 今までの中で最小の t の値と比べる。*)
        let t0p = solver_dist.(0) in
-
+         (*ここ通ってない!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
        if (fless 0.0 t0p) then
+      (*ここ通ってない!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
 	 if (fless t0p tmin.(0)) then
 	   (
 	    let t = t0p +. 0.01 in
 	    let q0 = dirvec.(0) *. t +. startp.(0) in
 	    let q1 = dirvec.(1) *. t +. startp.(1) in
 	    let q2 = dirvec.(2) *. t +. startp.(2) in
+      (*ここ通ってない!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
 	    if check_all_inside 0 and_group q0 q1 q2 then
-	      (
-		tmin.(0) <- t;
+	      ( 
+		tmin.(0) <- t; (*ここ通ってない!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
 		vecset intersection_point q0 q1 q2;
 		intersected_object_id.(0) <- iobj;
 		intsec_rectside.(0) <- t0
@@ -1600,6 +1607,7 @@ let rec add_light bright hilight hilight_scale =
   (* 不完全鏡面反射 cos ^4 モデル *)
   if fispos hilight then (
     let ihl = fsqr (fsqr hilight) *. hilight_scale in
+  (*ここ通ってない!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
     rgb.(0) <- rgb.(0) +. ihl;
     rgb.(1) <- rgb.(1) +. ihl;
     rgb.(2) <- rgb.(2) +. ihl
@@ -1637,9 +1645,11 @@ in
    直接光を追跡する
  *****************************************************************************)
 let rec trace_ray nref energy dirvec pixel dist =
+(*nrefは0!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
   if nref <= 4 then (
     let surface_ids = p_surface_ids pixel in
     if judge_intersection dirvec then (
+      (*ここ通ってない!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
     (* オブジェクトにぶつかった場合 *)
       let obj_id = intersected_object_id.(0) in
       let obj = objects.(obj_id) in
@@ -1677,7 +1687,7 @@ let rec trace_ray nref energy dirvec pixel dist =
       (* 光源光が直接届く場合、RGB成分にこれを加味する *)
       if not (shadow_check_one_or_matrix 0 or_net.(0)) then
         let bright = fneg (veciprod nvector light) *. diffuse in
-        let hilight = fneg (veciprod dirvec light) in
+        let hilight = fneg (veciprod dirvec light) in (*ここ通ってない!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
         add_light bright hilight hilight_scale
       else ();
 
@@ -1705,12 +1715,13 @@ let rec trace_ray nref energy dirvec pixel dist =
       surface_ids.(nref) <- -1;
 
       if nref <> 0 then (
-	let hl = fneg (veciprod dirvec light) in
+	let hl = fneg (veciprod dirvec light) in (*ここも通ってない!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!*)
         (* 90°を超える場合は0 (光なし) *)
 	if fispos hl then
 	  (
 	   (* ハイライト強度は角度の cos^3 に比例 *)
 	   let ihl = fsqr hl *. hl *. energy *. beam.(0) in
+      (*ここ通ってない！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！！*)
 	   rgb.(0) <- rgb.(0) +. ihl;
 	   rgb.(1) <- rgb.(1) +. ihl;
 	   rgb.(2) <- rgb.(2) +. ihl
@@ -2294,7 +2305,7 @@ let rec rt size_x size_y =
  let prev = create_pixelline () in
  let cur  = create_pixelline () in
  let next = create_pixelline () in
- read_parameter();
+ read_parameter(); (*これは動いている*)
  write_ppm_header ();
  init_dirvecs();
  veccpy (d_vec light_dirvec) light;

@@ -2,6 +2,15 @@
 
 (**************** グローバル変数の宣言 ****************)
 
+(*let rec fabs x = 0.0 +. fabs_lib x in
+    let rec sqrt x = 0.0 +. sqrt_lib x in
+    let rec floor x = 0.0 +. floor_lib x in
+    let rec int_of_float x = 0 + int_of_float_lib x in
+    let rec truncate x = 0  + truncate_lib x in
+    let rec float_of_int x = 0.0 +. float_of_int_lib x in
+    let rec read_float _ = 0.0 +. read_float_lib () in
+    let rec read_int _ = 0 + read_int_lib () in*)
+
 (* オブジェクトの個数 *)
 let n_objects = create_array 1 0 in
 

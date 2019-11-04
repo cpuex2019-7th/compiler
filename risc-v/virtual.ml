@@ -58,7 +58,7 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
   | Closure.Add(x, y) -> Ans(Add(x, V(y)))
   | Closure.Sub(x, y) -> Ans(Sub(x, V(y)))
   | Closure.Mul(x, y) -> Ans(Mul(x, V(y)))
-  | Closure.Div(x, y) -> Ans(Mul(x, V(y)))
+  | Closure.Div(x, y) -> Ans(Div(x, V(y)))
   | Closure.FNeg(x) -> Ans(FNegD(x))
   | Closure.FAdd(x, y) -> Ans(FAddD(x, y))
   | Closure.FSub(x, y) -> Ans(FSubD(x, y))
@@ -137,7 +137,7 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
       (match M.find x env with
       | Type.Array(Type.Unit) -> Ans(Nop)
       | Type.Array(Type.Float) ->
-          Let((offset, Type.Int), SLL(y, C(3)), (*ここC(2)とかじゃなくて大丈夫か*)
+          Let((offset, Type.Int), SLL(y, C(2)), (*ここC(2)とかじゃなくて大丈夫か*)
               Ans(LdDF(x, V(offset))))
       | Type.Array(_) ->
           Let((offset, Type.Int), SLL(y, C(2)),
@@ -148,7 +148,7 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
       (match M.find x env with
       | Type.Array(Type.Unit) -> Ans(Nop)
       | Type.Array(Type.Float) ->
-          Let((offset, Type.Int), SLL(y, C(3)), (*ここも大丈夫か*)
+          Let((offset, Type.Int), SLL(y, C(2)), (*ここも大丈夫か*)
               Ans(StDF(z, x, V(offset))))
       | Type.Array(_) ->
           Let((offset, Type.Int), SLL(y, C(2)),

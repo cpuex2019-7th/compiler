@@ -38,7 +38,9 @@ manyargs
 
 # ↓risc-v用のテストファイル
 RISCVTESTSINT = fib ack adder cls-bug cls-rec cls-reg-bug funcomp gcd join-reg join-reg2 \
-join-stack join-stack2 join-stack3 spill spill2 spill3 sum-tail sum
+join-stack join-stack2 join-stack3 spill spill2 spill3 sum-tail sum even-odd cls-bug2 \
+inprod-rec inprod inprod-loop matmul-flat matmul non-tail-if non-tail-if2 print shuffle \
+fabs truncate floor fsqrt sin
 
 #RISCVTESTSFLOAT = fibf
 
@@ -65,17 +67,19 @@ SIMULATOR = cpuex_sim
 riscv_test: $(RISCVTESTSINT:%=riscv-test/%.cmp) #$(RISCVTESTSFLOAT:%=riscv-test/%.cmp) 
 
 .PRECIOUS: riscv-test/%.s riscv-test/% riscv-test/%.res riscv-test/%.ans riscv-test/%.cmp
-TRASH = $(RISCVTESTSINT:%=riscv-test/%.s) $(RISCVTESTSINT:%=riscv-test/%) $(RISCVTESTSINT:%=riscv-test/%.res) $(RISCVTESTSINT:%=riscv-test/%.ans) $(RISCVTESTSINT:%=riscv-test/%.cmp) #$(RISCVTESTSFLOAT:%=riscv-test/%.s) $(RISCVTESTSFLOAT:%=riscv-test/%) $(RISCVTESTSFLOAT:%=riscv-test/%.res) $(RISCVTESTSFLOAT:%=riscv-test/%.ans) $(RISCVTESTSFLOAT:%=riscv-test/%.cmp)
+TRASH = $(RISCVTESTSINT:%=riscv-test/%.s) $(RISCVTESTSINT:%=riscv-test/%) $(RISCVTESTSINT:%=riscv-test/%.res) $(RISCVTESTSINT:%=riscv-test/%.ans) $(RISCVTESTSINT:%=riscv-test/%.cmp) $(RISCVTESTINT:%=riscv-test/sub/%.ml)#$(RISCVTESTSFLOAT:%=riscv-test/%.s) $(RISCVTESTSFLOAT:%=riscv-test/%) $(RISCVTESTSFLOAT:%=riscv-test/%.res) $(RISCVTESTSFLOAT:%=riscv-test/%.ans) $(RISCVTESTSFLOAT:%=riscv-test/%.cmp)
 
 riscv-test/%.s: $(RESULT) riscv-test/%.ml
-	./$(RESULT) riscv-test/$*
+	./$(RESULT) riscv-test/$* -g
 riscv-test/%: riscv-test/%.s libmincaml.S 
 	$(ASM) $@ $^
 #$(RISCVTESTSFLOAT:%=riscv-test/%.res): $(RISCVTESTSFLOAT:%=riscv-test/%)
 #	$(SIMULATOR) $< | cpuex_d2f > $@
 riscv-test/%.res: riscv-test/%
 	$(SIMULATOR) $< -o $@
-riscv-test/%.ans: riscv-test/%.ml
+riscv-test/sub/%.ml: riscv-test/%.ml riscv-test/lib/lib.ml
+	cat riscv-test/lib/lib.ml $< > $@
+riscv-test/%.ans: riscv-test/sub/%.ml
 	ocaml $< > $@
 riscv-test/%.cmp: riscv-test/%.res riscv-test/%.ans
 	diff $^ > $@

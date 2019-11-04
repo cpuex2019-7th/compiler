@@ -1,5 +1,7 @@
 min_caml_start:
 	fmvwx	f0, x0
+	li	x2, 0x1f00000
+	li	x3, 0x0000000
 	li	x10, 1 ; set
 	li	x5, 0 ; set
 	sw	x1, x2, 4 ; nontail call directly starts
@@ -1531,13 +1533,13 @@ bge_else.9244:
 	jalr	x0, x1, 0 ;tail int return
 vecset.2643:
 	fsw	f1, x10, 0
-	fsw	f2, x10, 8
-	fsw	f3, x10, 16
+	fsw	f2, x10, 4
+	fsw	f3, x10, 8
 	jalr	x0, x1, 0 ;tail unit
 vecfill.2648:
 	fsw	f1, x10, 0
+	fsw	f1, x10, 4
 	fsw	f1, x10, 8
-	fsw	f1, x10, 16
 	jalr	x0, x1, 0 ;tail unit
 vecbzero.2651:
 	li	x5, 0 ; setli
@@ -1546,10 +1548,10 @@ vecbzero.2651:
 veccpy.2653:
 	flw	f1, x5, 0
 	fsw	f1, x10, 0
+	flw	f1, x5, 4
+	fsw	f1, x10, 4
 	flw	f1, x5, 8
 	fsw	f1, x10, 8
-	flw	f1, x5, 16
-	fsw	f1, x10, 16
 	jalr	x0, x1, 0 ;tail unit
 vecunit_sgn.2661:
 	flw	f1, x10, 0
@@ -1561,7 +1563,7 @@ vecunit_sgn.2661:
 	addi	x2, x2, -16
 	lw	x1, x2, 12
 	lw	x10, x2, 4 ;nontail restore
-	flw	f2, x10, 8
+	flw	f2, x10, 4
 	fsw	f1, x2,  8 ; nontail, save
 	fadd	f1, f0, f2 ; args
 	sw	x1, x2, 12 ; nontail call directly starts
@@ -1572,7 +1574,7 @@ vecunit_sgn.2661:
 	flw	f2, x2, 8
 	fadd	f1, f2, f1 ; fadd
 	lw	x10, x2, 4 ;nontail restore
-	flw	f2, x10, 16
+	flw	f2, x10, 8
 	fsw	f1, x2,  12 ; nontail, save
 	fadd	f1, f0, f2 ; args
 	sw	x1, x2, 20 ; nontail call directly starts
@@ -1618,33 +1620,33 @@ be_cont.9249:
 	flw	f2, x10, 0
 	fmul	f2, f2, f1
 	fsw	f2, x10, 0
-	flw	f2, x10, 8
+	flw	f2, x10, 4
 	fmul	f2, f2, f1
-	fsw	f2, x10, 8
-	flw	f2, x10, 16
+	fsw	f2, x10, 4
+	flw	f2, x10, 8
 	fmul	f1, f2, f1
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	jalr	x0, x1, 0 ;tail unit
 veciprod.2664:
 	flw	f1, x10, 0
 	flw	f2, x5, 0
 	fmul	f1, f1, f2
-	flw	f2, x10, 8
-	flw	f3, x5, 8
+	flw	f2, x10, 4
+	flw	f3, x5, 4
 	fmul	f2, f2, f3
 	fadd	f1, f1, f2 ; fadd
-	flw	f2, x10, 16
-	flw	f3, x5, 16
+	flw	f2, x10, 8
+	flw	f3, x5, 8
 	fmul	f2, f2, f3
 	fadd	f1, f1, f2 ; fadd
 	jalr	x0, x1, 0 ;tail int return
 veciprod2.2667:
 	flw	f4, x10, 0
 	fmul	f1, f4, f1
-	flw	f4, x10, 8
+	flw	f4, x10, 4
 	fmul	f2, f4, f2
 	fadd	f1, f1, f2 ; fadd
-	flw	f2, x10, 16
+	flw	f2, x10, 8
 	fmul	f2, f2, f3
 	fadd	f1, f1, f2 ; fadd
 	jalr	x0, x1, 0 ;tail int return
@@ -1654,41 +1656,41 @@ vecaccum.2672:
 	fmul	f3, f1, f3
 	fadd	f2, f2, f3 ; fadd
 	fsw	f2, x10, 0
-	flw	f2, x10, 8
-	flw	f3, x5, 8
+	flw	f2, x10, 4
+	flw	f3, x5, 4
 	fmul	f3, f1, f3
 	fadd	f2, f2, f3 ; fadd
-	fsw	f2, x10, 8
-	flw	f2, x10, 16
-	flw	f3, x5, 16
+	fsw	f2, x10, 4
+	flw	f2, x10, 8
+	flw	f3, x5, 8
 	fmul	f1, f1, f3
 	fadd	f1, f2, f1 ; fadd
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	jalr	x0, x1, 0 ;tail unit
 vecadd.2676:
 	flw	f1, x10, 0
 	flw	f2, x5, 0
 	fadd	f1, f1, f2 ; fadd
 	fsw	f1, x10, 0
+	flw	f1, x10, 4
+	flw	f2, x5, 4
+	fadd	f1, f1, f2 ; fadd
+	fsw	f1, x10, 4
 	flw	f1, x10, 8
 	flw	f2, x5, 8
 	fadd	f1, f1, f2 ; fadd
 	fsw	f1, x10, 8
-	flw	f1, x10, 16
-	flw	f2, x5, 16
-	fadd	f1, f1, f2 ; fadd
-	fsw	f1, x10, 16
 	jalr	x0, x1, 0 ;tail unit
 vecscale.2682:
 	flw	f2, x10, 0
 	fmul	f2, f2, f1
 	fsw	f2, x10, 0
-	flw	f2, x10, 8
+	flw	f2, x10, 4
 	fmul	f2, f2, f1
-	fsw	f2, x10, 8
-	flw	f2, x10, 16
+	fsw	f2, x10, 4
+	flw	f2, x10, 8
 	fmul	f1, f2, f1
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	jalr	x0, x1, 0 ;tail unit
 vecaccumv.2685:
 	flw	f1, x10, 0
@@ -1697,18 +1699,18 @@ vecaccumv.2685:
 	fmul	f2, f2, f3
 	fadd	f1, f1, f2 ; fadd
 	fsw	f1, x10, 0
+	flw	f1, x10, 4
+	flw	f2, x5, 4
+	flw	f3, x6, 4
+	fmul	f2, f2, f3
+	fadd	f1, f1, f2 ; fadd
+	fsw	f1, x10, 4
 	flw	f1, x10, 8
 	flw	f2, x5, 8
 	flw	f3, x6, 8
 	fmul	f2, f2, f3
 	fadd	f1, f1, f2 ; fadd
 	fsw	f1, x10, 8
-	flw	f1, x10, 16
-	flw	f2, x5, 16
-	flw	f3, x6, 16
-	fmul	f2, f2, f3
-	fadd	f1, f1, f2 ; fadd
-	fsw	f1, x10, 16
 	jalr	x0, x1, 0 ;tail unit
 o_texturetype.2689:
 	lw	x10, x10, 0 ; ld
@@ -1731,11 +1733,11 @@ o_param_a.2699:
 	jalr	x0, x1, 0 ;tail int return
 o_param_b.2701:
 	lw	x10, x10, 16 ; ld
-	flw	f1, x10, 8
+	flw	f1, x10, 4
 	jalr	x0, x1, 0 ;tail int return
 o_param_c.2703:
 	lw	x10, x10, 16 ; ld
-	flw	f1, x10, 16
+	flw	f1, x10, 8
 	jalr	x0, x1, 0 ;tail int return
 o_param_abc.2705:
 	lw	x10, x10, 16 ; ld
@@ -1746,11 +1748,11 @@ o_param_x.2707:
 	jalr	x0, x1, 0 ;tail int return
 o_param_y.2709:
 	lw	x10, x10, 20 ; ld
-	flw	f1, x10, 8
+	flw	f1, x10, 4
 	jalr	x0, x1, 0 ;tail int return
 o_param_z.2711:
 	lw	x10, x10, 20 ; ld
-	flw	f1, x10, 16
+	flw	f1, x10, 8
 	jalr	x0, x1, 0 ;tail int return
 o_diffuse.2713:
 	lw	x10, x10, 28 ; ld
@@ -1758,7 +1760,7 @@ o_diffuse.2713:
 	jalr	x0, x1, 0 ;tail int return
 o_hilight.2715:
 	lw	x10, x10, 28 ; ld
-	flw	f1, x10, 8
+	flw	f1, x10, 4
 	jalr	x0, x1, 0 ;tail int return
 o_color_red.2717:
 	lw	x10, x10, 32 ; ld
@@ -1766,11 +1768,11 @@ o_color_red.2717:
 	jalr	x0, x1, 0 ;tail int return
 o_color_green.2719:
 	lw	x10, x10, 32 ; ld
-	flw	f1, x10, 8
+	flw	f1, x10, 4
 	jalr	x0, x1, 0 ;tail int return
 o_color_blue.2721:
 	lw	x10, x10, 32 ; ld
-	flw	f1, x10, 16
+	flw	f1, x10, 8
 	jalr	x0, x1, 0 ;tail int return
 o_param_r1.2723:
 	lw	x10, x10, 36 ; ld
@@ -1778,11 +1780,11 @@ o_param_r1.2723:
 	jalr	x0, x1, 0 ;tail int return
 o_param_r2.2725:
 	lw	x10, x10, 36 ; ld
-	flw	f1, x10, 8
+	flw	f1, x10, 4
 	jalr	x0, x1, 0 ;tail int return
 o_param_r3.2727:
 	lw	x10, x10, 36 ; ld
-	flw	f1, x10, 16
+	flw	f1, x10, 8
 	jalr	x0, x1, 0 ;tail int return
 o_param_ctbl.2729:
 	lw	x10, x10, 40 ; ld
@@ -1860,14 +1862,14 @@ read_screen_settings.2762:
 	addi	x2, x2, -24
 	lw	x1, x2, 20
 	lw	x10, x2, 16 ;nontail restore
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	sw	x1, x2, 20 ; nontail call directly starts
 	addi	x2, x2, 24
 	jal	x1, min_caml_read_float
 	addi	x2, x2, -24
 	lw	x1, x2, 20
 	lw	x10, x2, 16 ;nontail restore
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	sw	x1, x2, 20 ; nontail call directly starts
 	addi	x2, x2, 24
 	jal	x1, min_caml_read_float
@@ -1928,18 +1930,18 @@ read_screen_settings.2762:
 	fmvwx	f3, x5; fmv
 	flw	f4, x2, 28
 	fmul	f3, f4, f3
-	fsw	f3, x10, 8
+	fsw	f3, x10, 4
 	flw	f3, x2, 36
 	fmul	f5, f2, f3
 	li	x5, 1128792064 ; setli
 	fmvwx	f6, x5; fmv
 	fmul	f5, f5, f6
-	fsw	f5, x10, 16
+	fsw	f5, x10, 8
 	lw	x5, x2, 8 ;nontail restore
 	fsw	f3, x5, 0
 	li	x6, 0 ; setli
 	fmvwx	f5, x6; fmv
-	fsw	f5, x5, 8
+	fsw	f5, x5, 4
 	fsw	f1, x2,  40 ; nontail, save
 	sw	x1, x2, 44 ; nontail call directly starts
 	addi	x2, x2, 48
@@ -1947,7 +1949,7 @@ read_screen_settings.2762:
 	addi	x2, x2, -48
 	lw	x1, x2, 44
 	lw	x10, x2, 8 ;nontail restore
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	flw	f1, x2, 28
 	sw	x1, x2, 44 ; nontail call directly starts
 	addi	x2, x2, 48
@@ -1965,7 +1967,7 @@ read_screen_settings.2762:
 	addi	x2, x2, -48
 	lw	x1, x2, 44
 	lw	x10, x2, 4 ;nontail restore
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	flw	f1, x2, 28
 	sw	x1, x2, 44 ; nontail call directly starts
 	addi	x2, x2, 48
@@ -1975,7 +1977,7 @@ read_screen_settings.2762:
 	flw	f2, x2, 36
 	fmul	f1, f1, f2
 	lw	x10, x2, 4 ;nontail restore
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	lw	x10, x2, 16 ;nontail restore
 	flw	f1, x10, 0
 	lw	x5, x2, 12 ;nontail restore
@@ -1983,14 +1985,14 @@ read_screen_settings.2762:
 	fsub	f1, f1, f2 ; fsub
 	lw	x6, x2, 0 ;nontail restore
 	fsw	f1, x6, 0
+	flw	f1, x10, 4
+	flw	f2, x5, 4
+	fsub	f1, f1, f2 ; fsub
+	fsw	f1, x6, 4
 	flw	f1, x10, 8
 	flw	f2, x5, 8
 	fsub	f1, f1, f2 ; fsub
 	fsw	f1, x6, 8
-	flw	f1, x10, 16
-	flw	f2, x5, 16
-	fsub	f1, f1, f2 ; fsub
-	fsw	f1, x6, 16
 	jalr	x0, x1, 0 ;tail unit
 read_light.2764:
 	lw	x10, x31, 8 ; ld
@@ -2024,7 +2026,7 @@ read_light.2764:
 	addi	x2, x2, -16
 	lw	x1, x2, 12
 	lw	x10, x2, 4 ;nontail restore
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	sw	x1, x2, 12 ; nontail call directly starts
 	addi	x2, x2, 16
 	jal	x1, min_caml_read_float
@@ -2064,7 +2066,7 @@ read_light.2764:
 	flw	f2, x2, 16
 	fmul	f1, f2, f1
 	lw	x10, x2, 4 ;nontail restore
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	sw	x1, x2, 20 ; nontail call directly starts
 	addi	x2, x2, 24
 	jal	x1, min_caml_read_float
@@ -2092,7 +2094,7 @@ rotate_quadratic_matrix.2766:
 	addi	x2, x2, -16
 	lw	x1, x2, 12
 	lw	x10, x2, 4 ;nontail restore
-	flw	f2, x10, 8
+	flw	f2, x10, 4
 	fsw	f1, x2,  12 ; nontail, save
 	fadd	f1, f0, f2 ; args
 	sw	x1, x2, 20 ; nontail call directly starts
@@ -2101,7 +2103,7 @@ rotate_quadratic_matrix.2766:
 	addi	x2, x2, -24
 	lw	x1, x2, 20
 	lw	x10, x2, 4 ;nontail restore
-	flw	f2, x10, 8
+	flw	f2, x10, 4
 	fsw	f1, x2,  16 ; nontail, save
 	fadd	f1, f0, f2 ; args
 	sw	x1, x2, 20 ; nontail call directly starts
@@ -2110,7 +2112,7 @@ rotate_quadratic_matrix.2766:
 	addi	x2, x2, -24
 	lw	x1, x2, 20
 	lw	x10, x2, 4 ;nontail restore
-	flw	f2, x10, 16
+	flw	f2, x10, 8
 	fsw	f1, x2,  20 ; nontail, save
 	fadd	f1, f0, f2 ; args
 	sw	x1, x2, 28 ; nontail call directly starts
@@ -2119,7 +2121,7 @@ rotate_quadratic_matrix.2766:
 	addi	x2, x2, -32
 	lw	x1, x2, 28
 	lw	x10, x2, 4 ;nontail restore
-	flw	f2, x10, 16
+	flw	f2, x10, 8
 	fsw	f1, x2,  24 ; nontail, save
 	fadd	f1, f0, f2 ; args
 	sw	x1, x2, 28 ; nontail call directly starts
@@ -2169,8 +2171,8 @@ rotate_quadratic_matrix.2766:
 	fmul	f2, f4, f2
 	lw	x10, x2, 0 ;nontail restore
 	flw	f4, x10, 0
-	flw	f5, x10, 8
-	flw	f6, x10, 16
+	flw	f5, x10, 4
+	flw	f6, x10, 8
 	flw	f7, x2, 48
 	fsw	f2, x2,  52 ; nontail, save
 	fsw	f3, x2,  56 ; nontail, save
@@ -2245,7 +2247,7 @@ rotate_quadratic_matrix.2766:
 	flw	f3, x2, 88
 	fadd	f1, f3, f1 ; fadd
 	lw	x10, x2, 0 ;nontail restore
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	flw	f1, x2, 32
 	sw	x1, x2, 92 ; nontail call directly starts
 	addi	x2, x2, 96
@@ -2279,7 +2281,7 @@ rotate_quadratic_matrix.2766:
 	flw	f3, x2, 96
 	fadd	f1, f3, f1 ; fadd
 	lw	x10, x2, 0 ;nontail restore
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	li	x10, 1073741824 ; setli
 	fmvwx	f1, x10; fmv
 	flw	f3, x2, 40
@@ -2315,7 +2317,7 @@ rotate_quadratic_matrix.2766:
 	fmul	f12, f13, f12
 	fadd	f6, f6, f12 ; fadd
 	fmul	f1, f1, f6
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	li	x5, 1073741824 ; setli
 	fmvwx	f1, x5; fmv
 	fmul	f4, f4, f5
@@ -2327,7 +2329,7 @@ rotate_quadratic_matrix.2766:
 	fmul	f2, f2, f9
 	fadd	f2, f3, f2 ; fadd
 	fmul	f1, f1, f2
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	jalr	x0, x1, 0 ;tail unit
 read_nth_object.2769:
 	lw	x5, x31, 4 ; ld
@@ -2385,14 +2387,14 @@ be_else.9261:
 	addi	x2, x2, -32
 	lw	x1, x2, 28
 	lw	x10, x2, 24 ;nontail restore
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	sw	x1, x2, 28 ; nontail call directly starts
 	addi	x2, x2, 32
 	jal	x1, min_caml_read_float
 	addi	x2, x2, -32
 	lw	x1, x2, 28
 	lw	x10, x2, 24 ;nontail restore
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	li	x5, 3 ; set
 	li	x6, 0 ; setli
 	fmvwx	f1, x6; fmv
@@ -2416,14 +2418,14 @@ be_else.9261:
 	addi	x2, x2, -40
 	lw	x1, x2, 36
 	lw	x10, x2, 28 ;nontail restore
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	sw	x1, x2, 36 ; nontail call directly starts
 	addi	x2, x2, 40
 	jal	x1, min_caml_read_float
 	addi	x2, x2, -40
 	lw	x1, x2, 36
 	lw	x10, x2, 28 ;nontail restore
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	sw	x1, x2, 36 ; nontail call directly starts
 	addi	x2, x2, 40
 	jal	x1, min_caml_read_float
@@ -2458,7 +2460,7 @@ be_else.9261:
 	addi	x2, x2, -48
 	lw	x1, x2, 44
 	lw	x10, x2, 36 ;nontail restore
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	li	x5, 3 ; set
 	li	x6, 0 ; setli
 	fmvwx	f1, x6; fmv
@@ -2482,14 +2484,14 @@ be_else.9261:
 	addi	x2, x2, -48
 	lw	x1, x2, 44
 	lw	x10, x2, 40 ;nontail restore
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	sw	x1, x2, 44 ; nontail call directly starts
 	addi	x2, x2, 48
 	jal	x1, min_caml_read_float
 	addi	x2, x2, -48
 	lw	x1, x2, 44
 	lw	x10, x2, 40 ;nontail restore
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	li	x5, 3 ; set
 	li	x6, 0 ; setli
 	fmvwx	f1, x6; fmv
@@ -2528,7 +2530,7 @@ be_else.9262:
 	addi	x2, x2, -56
 	lw	x1, x2, 52
 	lw	x10, x2, 44 ;nontail restore
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	sw	x1, x2, 52 ; nontail call directly starts
 	addi	x2, x2, 56
 	jal	x1, min_caml_read_float
@@ -2540,7 +2542,7 @@ be_else.9262:
 	addi	x2, x2, -56
 	lw	x1, x2, 52
 	lw	x10, x2, 44 ;nontail restore
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 be_cont.9263:
 	li	x5, 2 ; set
 	lw	x6, x2, 12 ;nontail restore
@@ -2624,7 +2626,7 @@ be_else.9268:
 be_cont.9269:
 	lw	x10, x2, 24 ;nontail restore
 	fsw	f1, x10, 0
-	flw	f1, x10, 8
+	flw	f1, x10, 4
 	fsw	f1, x2,  60 ; nontail, save
 	sw	x1, x2, 68 ; nontail call directly starts
 	addi	x2, x2, 72
@@ -2655,8 +2657,8 @@ be_else.9270:
 	fmvwx	f1, x10; fmv
 be_cont.9271:
 	lw	x10, x2, 24 ;nontail restore
-	fsw	f1, x10, 8
-	flw	f1, x10, 16
+	fsw	f1, x10, 4
+	flw	f1, x10, 8
 	fsw	f1, x2,  68 ; nontail, save
 	sw	x1, x2, 76 ; nontail call directly starts
 	addi	x2, x2, 80
@@ -2687,7 +2689,7 @@ be_else.9272:
 	fmvwx	f1, x10; fmv
 be_cont.9273:
 	lw	x10, x2, 24 ;nontail restore
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	jal	x0, be_cont.9267 ; then sentence ends
 be_else.9266:
 	li	x5, 2 ; set
@@ -2899,7 +2901,7 @@ read_parameter.2781:
 	jalr	x0, x1, 0 ;tail unit
 solver_rect_surface.2783:
 	lw	x9, x31, 4 ; ld
-	slli	x4, x6, 3 ; sll
+	slli	x4, x6, 2 ; sll
 	add	x5, x5, x4
 	flw	f4, x5, 0
 	sub	x5, x5, x4
@@ -2935,7 +2937,7 @@ solver_rect_surface.2783:
 	addi	x2, x2, -48
 	lw	x1, x2, 44
 	lw	x5, x2, 28 ;nontail restore
-	slli	x6, x5, 3 ; sll
+	slli	x6, x5, 2 ; sll
 	lw	x7, x2, 24 ;nontail restore
 	add	x7, x7, x6
 	flw	f1, x7, 0
@@ -2954,7 +2956,7 @@ solver_rect_surface.2783:
 	addi	x2, x2, -48
 	lw	x1, x2, 44
 	lw	x5, x2, 28 ;nontail restore
-	slli	x6, x5, 3 ; sll
+	slli	x6, x5, 2 ; sll
 	lw	x7, x2, 36 ;nontail restore
 	add	x7, x7, x6
 	flw	f1, x7, 0
@@ -2967,14 +2969,14 @@ solver_rect_surface.2783:
 	flw	f2, x2, 20
 	fsub	f1, f1, f2 ; fsub
 	lw	x10, x2, 28 ;nontail restore
-	slli	x10, x10, 3 ; sll
+	slli	x10, x10, 2 ; sll
 	lw	x5, x2, 24 ;nontail restore
 	add	x5, x5, x10
 	flw	f2, x5, 0
 	sub	x5, x5, x10
 	fdiv	f1, f1, f2
 	lw	x10, x2, 16 ;nontail restore
-	slli	x6, x10, 3 ; sll
+	slli	x6, x10, 2 ; sll
 	add	x5, x5, x6
 	flw	f2, x5, 0
 	sub	x5, x5, x6
@@ -2989,7 +2991,7 @@ solver_rect_surface.2783:
 	addi	x2, x2, -56
 	lw	x1, x2, 52
 	lw	x10, x2, 16 ;nontail restore
-	slli	x10, x10, 3 ; sll
+	slli	x10, x10, 2 ; sll
 	lw	x5, x2, 36 ;nontail restore
 	add	x5, x5, x10
 	flw	f2, x5, 0
@@ -3005,7 +3007,7 @@ solver_rect_surface.2783:
 	jalr	x0, x1, 0 ;tail int return
 be_else.9290:
 	lw	x10, x2, 8 ;nontail restore
-	slli	x5, x10, 3 ; sll
+	slli	x5, x10, 2 ; sll
 	lw	x6, x2, 24 ;nontail restore
 	add	x6, x6, x5
 	flw	f1, x6, 0
@@ -3020,7 +3022,7 @@ be_else.9290:
 	addi	x2, x2, -56
 	lw	x1, x2, 52
 	lw	x10, x2, 8 ;nontail restore
-	slli	x10, x10, 3 ; sll
+	slli	x10, x10, 2 ; sll
 	lw	x5, x2, 36 ;nontail restore
 	add	x5, x5, x10
 	flw	f2, x5, 0
@@ -3396,8 +3398,8 @@ be_else.9297:
 solver_second.2817:
 	lw	x6, x31, 4 ; ld
 	flw	f4, x5, 0
-	flw	f5, x5, 8
-	flw	f6, x5, 16
+	flw	f5, x5, 4
+	flw	f6, x5, 8
 	sw	x6, x2, 0 ; nontail,save
 	fsw	f3, x2,  4 ; nontail, save
 	fsw	f2, x2,  8 ; nontail, save
@@ -3422,8 +3424,8 @@ solver_second.2817:
 	bne	x10, x5, be_else.9298 ; tail if
 	lw	x10, x2, 20 ;nontail restore
 	flw	f1, x10, 0
-	flw	f2, x10, 8
-	flw	f3, x10, 16
+	flw	f2, x10, 4
+	flw	f3, x10, 8
 	flw	f4, x2, 12
 	flw	f5, x2, 8
 	flw	f6, x2, 4
@@ -3546,7 +3548,7 @@ solver.2823:
 	flw	f2, x2, 24
 	fsub	f1, f2, f1 ; fsub
 	lw	x10, x2, 20 ;nontail restore
-	flw	f2, x10, 8
+	flw	f2, x10, 4
 	lw	x5, x2, 16 ;nontail restore
 	fsw	f1, x2,  28 ; nontail, save
 	fsw	f2, x2,  32 ; nontail, save
@@ -3559,7 +3561,7 @@ solver.2823:
 	flw	f2, x2, 32
 	fsub	f1, f2, f1 ; fsub
 	lw	x10, x2, 20 ;nontail restore
-	flw	f2, x10, 16
+	flw	f2, x10, 8
 	lw	x10, x2, 16 ;nontail restore
 	fsw	f1, x2,  36 ; nontail, save
 	fsw	f2, x2,  40 ; nontail, save
@@ -3611,9 +3613,9 @@ solver_rect_fast.2827:
 	lw	x7, x31, 4 ; ld
 	flw	f4, x6, 0
 	fsub	f4, f4, f1 ; fsub
-	flw	f5, x6, 8
+	flw	f5, x6, 4
 	fmul	f4, f4, f5
-	flw	f5, x5, 8
+	flw	f5, x5, 4
 	fmul	f5, f4, f5
 	fadd	f5, f5, f2 ; fadd
 	sw	x7, x2, 0 ; nontail,save
@@ -3650,7 +3652,7 @@ solver_rect_fast.2827:
 	jal	x0, be_cont.9307 ; then sentence ends
 be_else.9306:
 	lw	x10, x2, 24 ;nontail restore
-	flw	f1, x10, 16
+	flw	f1, x10, 8
 	flw	f2, x2, 20
 	fmul	f1, f2, f1
 	flw	f3, x2, 16
@@ -3680,7 +3682,7 @@ be_else.9306:
 	jal	x0, be_cont.9309 ; then sentence ends
 be_else.9308:
 	lw	x10, x2, 12 ;nontail restore
-	flw	f1, x10, 8
+	flw	f1, x10, 4
 	sw	x1, x2, 44 ; nontail call directly starts
 	addi	x2, x2, 48
 	jal	x1, fiszero.2609
@@ -3698,10 +3700,10 @@ be_cont.9307:
 	li	x5, 0 ; set
 	bne	x10, x5, be_else.9312 ; tail if
 	lw	x10, x2, 12 ;nontail restore
-	flw	f1, x10, 16
+	flw	f1, x10, 8
 	flw	f2, x2, 8
 	fsub	f1, f1, f2 ; fsub
-	flw	f3, x10, 24
+	flw	f3, x10, 12
 	fmul	f1, f1, f3
 	lw	x5, x2, 24 ;nontail restore
 	flw	f3, x5, 0
@@ -3735,7 +3737,7 @@ be_cont.9307:
 	jal	x0, be_cont.9314 ; then sentence ends
 be_else.9313:
 	lw	x10, x2, 24 ;nontail restore
-	flw	f1, x10, 16
+	flw	f1, x10, 8
 	flw	f2, x2, 40
 	fmul	f1, f2, f1
 	flw	f3, x2, 16
@@ -3765,7 +3767,7 @@ be_else.9313:
 	jal	x0, be_cont.9316 ; then sentence ends
 be_else.9315:
 	lw	x10, x2, 12 ;nontail restore
-	flw	f1, x10, 24
+	flw	f1, x10, 12
 	sw	x1, x2, 52 ; nontail call directly starts
 	addi	x2, x2, 56
 	jal	x1, fiszero.2609
@@ -3783,10 +3785,10 @@ be_cont.9314:
 	li	x5, 0 ; set
 	bne	x10, x5, be_else.9319 ; tail if
 	lw	x10, x2, 12 ;nontail restore
-	flw	f1, x10, 32
+	flw	f1, x10, 16
 	flw	f2, x2, 16
 	fsub	f1, f1, f2 ; fsub
-	flw	f2, x10, 40
+	flw	f2, x10, 20
 	fmul	f1, f1, f2
 	lw	x5, x2, 24 ;nontail restore
 	flw	f2, x5, 0
@@ -3820,7 +3822,7 @@ be_cont.9314:
 	jal	x0, be_cont.9321 ; then sentence ends
 be_else.9320:
 	lw	x10, x2, 24 ;nontail restore
-	flw	f1, x10, 8
+	flw	f1, x10, 4
 	flw	f2, x2, 52
 	fmul	f1, f2, f1
 	flw	f3, x2, 8
@@ -3850,7 +3852,7 @@ be_else.9320:
 	jal	x0, be_cont.9323 ; then sentence ends
 be_else.9322:
 	lw	x10, x2, 12 ;nontail restore
-	flw	f1, x10, 40
+	flw	f1, x10, 20
 	sw	x1, x2, 68 ; nontail call directly starts
 	addi	x2, x2, 72
 	jal	x1, fiszero.2609
@@ -3907,14 +3909,14 @@ solver_surface_fast.2834:
 	jalr	x0, x1, 0 ;tail int return
 be_else.9327:
 	lw	x10, x2, 16 ;nontail restore
-	flw	f1, x10, 8
+	flw	f1, x10, 4
 	flw	f2, x2, 12
 	fmul	f1, f1, f2
-	flw	f2, x10, 16
+	flw	f2, x10, 8
 	flw	f3, x2, 8
 	fmul	f2, f2, f3
 	fadd	f1, f1, f2 ; fadd
-	flw	f2, x10, 24
+	flw	f2, x10, 12
 	flw	f3, x2, 4
 	fmul	f2, f2, f3
 	fadd	f1, f1, f2 ; fadd
@@ -3941,14 +3943,14 @@ solver_second_fast.2840:
 	li	x5, 0 ; set
 	bne	x10, x5, be_else.9328 ; tail if
 	lw	x10, x2, 24 ;nontail restore
-	flw	f1, x10, 8
+	flw	f1, x10, 4
 	flw	f2, x2, 20
 	fmul	f1, f1, f2
-	flw	f3, x10, 16
+	flw	f3, x10, 8
 	flw	f4, x2, 16
 	fmul	f3, f3, f4
 	fadd	f1, f1, f3 ; fadd
-	flw	f3, x10, 24
+	flw	f3, x10, 12
 	flw	f5, x2, 12
 	fmul	f3, f3, f5
 	fadd	f1, f1, f3 ; fadd
@@ -4020,7 +4022,7 @@ be_else.9331:
 	flw	f2, x2, 28
 	fsub	f1, f2, f1 ; fsub
 	lw	x10, x2, 24 ;nontail restore
-	flw	f2, x10, 32
+	flw	f2, x10, 16
 	fmul	f1, f1, f2
 	lw	x10, x2, 0 ;nontail restore
 	fsw	f1, x10, 0
@@ -4035,7 +4037,7 @@ be_else.9332:
 	flw	f2, x2, 28
 	fadd	f1, f2, f1 ; fadd
 	lw	x10, x2, 24 ;nontail restore
-	flw	f2, x10, 32
+	flw	f2, x10, 16
 	fmul	f1, f1, f2
 	lw	x10, x2, 0 ;nontail restore
 	fsw	f1, x10, 0
@@ -4071,7 +4073,7 @@ solver_fast.2846:
 	flw	f2, x2, 28
 	fsub	f1, f2, f1 ; fsub
 	lw	x10, x2, 24 ;nontail restore
-	flw	f2, x10, 8
+	flw	f2, x10, 4
 	lw	x5, x2, 20 ;nontail restore
 	fsw	f1, x2,  32 ; nontail, save
 	fsw	f2, x2,  36 ; nontail, save
@@ -4084,7 +4086,7 @@ solver_fast.2846:
 	flw	f2, x2, 36
 	fsub	f1, f2, f1 ; fsub
 	lw	x10, x2, 24 ;nontail restore
-	flw	f2, x10, 16
+	flw	f2, x10, 8
 	lw	x10, x2, 20 ;nontail restore
 	fsw	f1, x2,  40 ; nontail, save
 	fsw	f2, x2,  44 ; nontail, save
@@ -4170,7 +4172,7 @@ be_else.9336:
 	lw	x10, x2, 8 ;nontail restore
 	flw	f1, x10, 0
 	lw	x10, x2, 4 ;nontail restore
-	flw	f2, x10, 24
+	flw	f2, x10, 12
 	fmul	f1, f1, f2
 	lw	x10, x2, 0 ;nontail restore
 	fsw	f1, x10, 0
@@ -4196,19 +4198,19 @@ solver_second_fast2.2857:
 	li	x5, 0 ; set
 	bne	x10, x5, be_else.9337 ; tail if
 	lw	x10, x2, 28 ;nontail restore
-	flw	f1, x10, 8
+	flw	f1, x10, 4
 	flw	f2, x2, 24
 	fmul	f1, f1, f2
-	flw	f2, x10, 16
+	flw	f2, x10, 8
 	flw	f3, x2, 20
 	fmul	f2, f2, f3
 	fadd	f1, f1, f2 ; fadd
-	flw	f2, x10, 24
+	flw	f2, x10, 12
 	flw	f3, x2, 16
 	fmul	f2, f2, f3
 	fadd	f1, f1, f2 ; fadd
 	lw	x5, x2, 12 ;nontail restore
-	flw	f2, x5, 24
+	flw	f2, x5, 12
 	fsw	f1, x2,  32 ; nontail, save
 	fsw	f2, x2,  36 ; nontail, save
 	sw	x1, x2, 44 ; nontail call directly starts
@@ -4248,7 +4250,7 @@ be_else.9338:
 	flw	f2, x2, 32
 	fsub	f1, f2, f1 ; fsub
 	lw	x10, x2, 28 ;nontail restore
-	flw	f2, x10, 32
+	flw	f2, x10, 16
 	fmul	f1, f1, f2
 	lw	x10, x2, 0 ;nontail restore
 	fsw	f1, x10, 0
@@ -4263,7 +4265,7 @@ be_else.9339:
 	flw	f2, x2, 32
 	fadd	f1, f2, f1 ; fadd
 	lw	x10, x2, 28 ;nontail restore
-	flw	f2, x10, 32
+	flw	f2, x10, 16
 	fmul	f1, f1, f2
 	lw	x10, x2, 0 ;nontail restore
 	fsw	f1, x10, 0
@@ -4294,8 +4296,8 @@ solver_fast2.2864:
 	addi	x2, x2, -32
 	lw	x1, x2, 28
 	flw	f1, x10, 0
-	flw	f2, x10, 8
-	flw	f3, x10, 16
+	flw	f2, x10, 4
+	flw	f3, x10, 8
 	lw	x5, x2, 20 ;nontail restore
 	sw	x10, x2, 24 ; nontail,save
 	fsw	f3, x2,  28 ; nontail, save
@@ -4422,16 +4424,16 @@ setup_rect_table.2867:
 	lw	x5, x2, 4 ;nontail restore
 	flw	f2, x5, 0
 	fdiv	f1, f1, f2
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	jal	x0, be_cont.9344 ; then sentence ends
 be_else.9343:
 	li	x10, 0 ; setli
 	fmvwx	f1, x10; fmv
 	lw	x10, x2, 8 ;nontail restore
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 be_cont.9344:
 	lw	x5, x2, 4 ;nontail restore
-	flw	f1, x5, 8
+	flw	f1, x5, 4
 	sw	x1, x2, 20 ; nontail call directly starts
 	addi	x2, x2, 24
 	jal	x1, fiszero.2609
@@ -4446,7 +4448,7 @@ be_cont.9344:
 	addi	x2, x2, -24
 	lw	x1, x2, 20
 	lw	x5, x2, 4 ;nontail restore
-	flw	f1, x5, 8
+	flw	f1, x5, 4
 	sw	x10, x2, 20 ; nontail,save
 	sw	x1, x2, 28 ; nontail call directly starts
 	addi	x2, x2, 32
@@ -4475,22 +4477,22 @@ be_cont.9344:
 	addi	x2, x2, -32
 	lw	x1, x2, 28
 	lw	x10, x2, 8 ;nontail restore
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	li	x5, 1065353216 ; setli
 	fmvwx	f1, x5; fmv
 	lw	x5, x2, 4 ;nontail restore
-	flw	f2, x5, 8
+	flw	f2, x5, 4
 	fdiv	f1, f1, f2
-	fsw	f1, x10, 24
+	fsw	f1, x10, 12
 	jal	x0, be_cont.9346 ; then sentence ends
 be_else.9345:
 	li	x10, 0 ; setli
 	fmvwx	f1, x10; fmv
 	lw	x10, x2, 8 ;nontail restore
-	fsw	f1, x10, 24
+	fsw	f1, x10, 12
 be_cont.9346:
 	lw	x5, x2, 4 ;nontail restore
-	flw	f1, x5, 16
+	flw	f1, x5, 8
 	sw	x1, x2, 28 ; nontail call directly starts
 	addi	x2, x2, 32
 	jal	x1, fiszero.2609
@@ -4505,7 +4507,7 @@ be_cont.9346:
 	addi	x2, x2, -32
 	lw	x1, x2, 28
 	lw	x5, x2, 4 ;nontail restore
-	flw	f1, x5, 16
+	flw	f1, x5, 8
 	sw	x10, x2, 28 ; nontail,save
 	sw	x1, x2, 36 ; nontail call directly starts
 	addi	x2, x2, 40
@@ -4534,19 +4536,19 @@ be_cont.9346:
 	addi	x2, x2, -40
 	lw	x1, x2, 36
 	lw	x10, x2, 8 ;nontail restore
-	fsw	f1, x10, 32
+	fsw	f1, x10, 16
 	li	x5, 1065353216 ; setli
 	fmvwx	f1, x5; fmv
 	lw	x5, x2, 4 ;nontail restore
-	flw	f2, x5, 16
+	flw	f2, x5, 8
 	fdiv	f1, f1, f2
-	fsw	f1, x10, 40
+	fsw	f1, x10, 20
 	jal	x0, be_cont.9348 ; then sentence ends
 be_else.9347:
 	li	x10, 0 ; setli
 	fmvwx	f1, x10; fmv
 	lw	x10, x2, 8 ;nontail restore
-	fsw	f1, x10, 40
+	fsw	f1, x10, 20
 be_cont.9348:
 	jalr	x0, x1, 0 ;tail int return
 setup_surface_table.2870:
@@ -4575,7 +4577,7 @@ setup_surface_table.2870:
 	flw	f2, x2, 12
 	fmul	f1, f2, f1
 	lw	x10, x2, 4 ;nontail restore
-	flw	f2, x10, 8
+	flw	f2, x10, 4
 	lw	x5, x2, 0 ;nontail restore
 	fsw	f1, x2,  16 ; nontail, save
 	fsw	f2, x2,  20 ; nontail, save
@@ -4590,7 +4592,7 @@ setup_surface_table.2870:
 	flw	f2, x2, 16
 	fadd	f1, f2, f1 ; fadd
 	lw	x10, x2, 4 ;nontail restore
-	flw	f2, x10, 16
+	flw	f2, x10, 8
 	lw	x10, x2, 0 ;nontail restore
 	fsw	f1, x2,  24 ; nontail, save
 	fsw	f2, x2,  28 ; nontail, save
@@ -4638,7 +4640,7 @@ be_else.9349:
 	addi	x2, x2, -40
 	lw	x1, x2, 36
 	lw	x10, x2, 8 ;nontail restore
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	lw	x5, x2, 0 ;nontail restore
 	add	x10, x5, x0 ; args
 	sw	x1, x2, 36 ; nontail call directly starts
@@ -4654,7 +4656,7 @@ be_else.9349:
 	addi	x2, x2, -40
 	lw	x1, x2, 36
 	lw	x10, x2, 8 ;nontail restore
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	lw	x5, x2, 0 ;nontail restore
 	add	x10, x5, x0 ; args
 	sw	x1, x2, 36 ; nontail call directly starts
@@ -4670,7 +4672,7 @@ be_else.9349:
 	addi	x2, x2, -40
 	lw	x1, x2, 36
 	lw	x10, x2, 8 ;nontail restore
-	fsw	f1, x10, 24
+	fsw	f1, x10, 12
 be_cont.9350:
 	jalr	x0, x1, 0 ;tail int return
 setup_second_table.2873:
@@ -4687,8 +4689,8 @@ setup_second_table.2873:
 	lw	x1, x2, 12
 	lw	x5, x2, 4 ;nontail restore
 	flw	f1, x5, 0
-	flw	f2, x5, 8
-	flw	f3, x5, 16
+	flw	f2, x5, 4
+	flw	f3, x5, 8
 	lw	x6, x2, 0 ;nontail restore
 	sw	x10, x2, 8 ; nontail,save
 	add	x10, x6, x0 ; args
@@ -4716,7 +4718,7 @@ setup_second_table.2873:
 	addi	x2, x2, -24
 	lw	x1, x2, 20
 	lw	x10, x2, 4 ;nontail restore
-	flw	f2, x10, 8
+	flw	f2, x10, 4
 	lw	x5, x2, 0 ;nontail restore
 	fsw	f1, x2,  20 ; nontail, save
 	fsw	f2, x2,  24 ; nontail, save
@@ -4734,7 +4736,7 @@ setup_second_table.2873:
 	addi	x2, x2, -32
 	lw	x1, x2, 28
 	lw	x10, x2, 4 ;nontail restore
-	flw	f2, x10, 16
+	flw	f2, x10, 8
 	lw	x5, x2, 0 ;nontail restore
 	fsw	f1, x2,  28 ; nontail, save
 	fsw	f2, x2,  32 ; nontail, save
@@ -4766,15 +4768,15 @@ setup_second_table.2873:
 	bne	x10, x5, be_else.9351 ; nontail if
 	lw	x10, x2, 8 ;nontail restore
 	flw	f1, x2, 20
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	flw	f1, x2, 28
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	flw	f1, x2, 36
-	fsw	f1, x10, 24
+	fsw	f1, x10, 12
 	jal	x0, be_cont.9352 ; then sentence ends
 be_else.9351:
 	lw	x10, x2, 4 ;nontail restore
-	flw	f1, x10, 16
+	flw	f1, x10, 8
 	lw	x5, x2, 0 ;nontail restore
 	fsw	f1, x2,  40 ; nontail, save
 	add	x10, x5, x0 ; args
@@ -4786,7 +4788,7 @@ be_else.9351:
 	flw	f2, x2, 40
 	fmul	f1, f2, f1
 	lw	x10, x2, 4 ;nontail restore
-	flw	f2, x10, 8
+	flw	f2, x10, 4
 	lw	x5, x2, 0 ;nontail restore
 	fsw	f1, x2,  44 ; nontail, save
 	fsw	f2, x2,  48 ; nontail, save
@@ -4808,9 +4810,9 @@ be_else.9351:
 	flw	f2, x2, 20
 	fsub	f1, f2, f1 ; fsub
 	lw	x10, x2, 8 ;nontail restore
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	lw	x5, x2, 4 ;nontail restore
-	flw	f1, x5, 16
+	flw	f1, x5, 8
 	lw	x6, x2, 0 ;nontail restore
 	fsw	f1, x2,  52 ; nontail, save
 	add	x10, x6, x0 ; args
@@ -4844,9 +4846,9 @@ be_else.9351:
 	flw	f2, x2, 28
 	fsub	f1, f2, f1 ; fsub
 	lw	x10, x2, 8 ;nontail restore
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	lw	x5, x2, 4 ;nontail restore
-	flw	f1, x5, 8
+	flw	f1, x5, 4
 	lw	x6, x2, 0 ;nontail restore
 	fsw	f1, x2,  64 ; nontail, save
 	add	x10, x6, x0 ; args
@@ -4879,7 +4881,7 @@ be_else.9351:
 	flw	f2, x2, 36
 	fsub	f1, f2, f1 ; fsub
 	lw	x10, x2, 8 ;nontail restore
-	fsw	f1, x10, 24
+	fsw	f1, x10, 12
 be_cont.9352:
 	flw	f1, x2, 12
 	sw	x1, x2, 76 ; nontail call directly starts
@@ -4894,7 +4896,7 @@ be_cont.9352:
 	flw	f2, x2, 12
 	fdiv	f1, f1, f2
 	lw	x10, x2, 8 ;nontail restore
-	fsw	f1, x10, 32
+	fsw	f1, x10, 16
 	jal	x0, be_cont.9354 ; then sentence ends
 be_else.9353:
 be_cont.9354:
@@ -5036,7 +5038,7 @@ setup_startp_constants.2881:
 	lw	x10, x2, 16 ;nontail restore
 	fsw	f1, x10, 0
 	lw	x5, x2, 8 ;nontail restore
-	flw	f1, x5, 8
+	flw	f1, x5, 4
 	lw	x6, x2, 12 ;nontail restore
 	fsw	f1, x2,  28 ; nontail, save
 	add	x10, x6, x0 ; args
@@ -5048,9 +5050,9 @@ setup_startp_constants.2881:
 	flw	f2, x2, 28
 	fsub	f1, f2, f1 ; fsub
 	lw	x10, x2, 16 ;nontail restore
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	lw	x5, x2, 8 ;nontail restore
-	flw	f1, x5, 16
+	flw	f1, x5, 8
 	lw	x6, x2, 12 ;nontail restore
 	fsw	f1, x2,  32 ; nontail, save
 	add	x10, x6, x0 ; args
@@ -5062,7 +5064,7 @@ setup_startp_constants.2881:
 	flw	f2, x2, 32
 	fsub	f1, f2, f1 ; fsub
 	lw	x10, x2, 16 ;nontail restore
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	li	x5, 2 ; set
 	lw	x6, x2, 20 ;nontail restore
 	bne	x6, x5, be_else.9362 ; nontail if
@@ -5075,15 +5077,15 @@ setup_startp_constants.2881:
 	lw	x1, x2, 36
 	lw	x5, x2, 16 ;nontail restore
 	flw	f1, x5, 0
-	flw	f2, x5, 8
-	flw	f3, x5, 16
+	flw	f2, x5, 4
+	flw	f3, x5, 8
 	sw	x1, x2, 36 ; nontail call directly starts
 	addi	x2, x2, 40
 	jal	x1, veciprod2.2667
 	addi	x2, x2, -40
 	lw	x1, x2, 36
 	lw	x10, x2, 16 ;nontail restore
-	fsw	f1, x10, 24
+	fsw	f1, x10, 12
 	jal	x0, be_cont.9363 ; then sentence ends
 be_else.9362:
 	li	x5, 2 ; set
@@ -5091,8 +5093,8 @@ be_else.9362:
 	jal	x0, bge_cont.9365 ; then sentence ends
 bge_else.9364:
 	flw	f1, x10, 0
-	flw	f2, x10, 8
-	flw	f3, x10, 16
+	flw	f2, x10, 4
+	flw	f3, x10, 8
 	lw	x5, x2, 12 ;nontail restore
 	add	x10, x5, x0 ; args
 	sw	x1, x2, 36 ; nontail call directly starts
@@ -5110,7 +5112,7 @@ bge_else.9364:
 be_else.9366:
 be_cont.9367:
 	lw	x10, x2, 16 ;nontail restore
-	fsw	f1, x10, 24
+	fsw	f1, x10, 12
 bge_cont.9365:
 be_cont.9363:
 	lw	x10, x2, 4 ;nontail restore
@@ -5519,13 +5521,13 @@ be_else.9386:
 	lw	x5, x2, 4 ;nontail restore
 	flw	f3, x5, 0
 	fadd	f2, f2, f3 ; fadd
-	flw	f3, x10, 8
+	flw	f3, x10, 4
 	fmul	f3, f3, f1
-	flw	f4, x5, 8
+	flw	f4, x5, 4
 	fadd	f3, f3, f4 ; fadd
-	flw	f4, x10, 16
+	flw	f4, x10, 8
 	fmul	f1, f4, f1
-	flw	f4, x5, 16
+	flw	f4, x5, 8
 	fadd	f1, f1, f4 ; fadd
 	li	x10, 0 ; set
 	lw	x5, x2, 12 ;nontail restore
@@ -5793,13 +5795,13 @@ be_else.9409:
 	lw	x5, x2, 16 ;nontail restore
 	flw	f3, x5, 0
 	fadd	f2, f2, f3 ; fadd
-	flw	f3, x10, 8
+	flw	f3, x10, 4
 	fmul	f3, f3, f1
-	flw	f4, x5, 8
+	flw	f4, x5, 4
 	fadd	f3, f3, f4 ; fadd
-	flw	f4, x10, 16
+	flw	f4, x10, 8
 	fmul	f4, f4, f1
-	flw	f5, x5, 16
+	flw	f5, x5, 8
 	fadd	f4, f4, f5 ; fadd
 	li	x5, 0 ; set
 	lw	x6, x2, 32 ;nontail restore
@@ -6118,13 +6120,13 @@ be_else.9431:
 	lw	x5, x2, 16 ;nontail restore
 	flw	f3, x5, 0
 	fadd	f2, f2, f3 ; fadd
-	flw	f3, x10, 8
+	flw	f3, x10, 4
 	fmul	f3, f3, f1
-	flw	f4, x5, 8
+	flw	f4, x5, 4
 	fadd	f3, f3, f4 ; fadd
-	flw	f4, x10, 16
+	flw	f4, x10, 8
 	fmul	f4, f4, f1
-	flw	f5, x5, 16
+	flw	f5, x5, 8
 	fadd	f4, f4, f5 ; fadd
 	li	x10, 0 ; set
 	lw	x5, x2, 44 ;nontail restore
@@ -6344,7 +6346,7 @@ get_nvector_rect.2949:
 	lw	x10, x2, 8 ;nontail restore
 	addi	x5, x10, -1 ; addi
 	addi	x10, x10, -1 ; addi
-	slli	x10, x10, 3 ; sll
+	slli	x10, x10, 2 ; sll
 	lw	x6, x2, 4 ;nontail restore
 	add	x6, x6, x10
 	flw	f1, x6, 0
@@ -6361,7 +6363,7 @@ get_nvector_rect.2949:
 	addi	x2, x2, -24
 	lw	x1, x2, 20
 	lw	x10, x2, 12 ;nontail restore
-	slli	x10, x10, 3 ; sll
+	slli	x10, x10, 2 ; sll
 	lw	x5, x2, 0 ;nontail restore
 	add	x5, x5, x10
 	fsw	f1, x5, 0
@@ -6396,7 +6398,7 @@ get_nvector_plane.2951:
 	addi	x2, x2, -16
 	lw	x1, x2, 12
 	lw	x10, x2, 4 ;nontail restore
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	lw	x5, x2, 0 ;nontail restore
 	add	x10, x5, x0 ; args
 	sw	x1, x2, 12 ; nontail call directly starts
@@ -6410,7 +6412,7 @@ get_nvector_plane.2951:
 	addi	x2, x2, -16
 	lw	x1, x2, 12
 	lw	x10, x2, 4 ;nontail restore
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	jalr	x0, x1, 0 ;tail unit
 get_nvector_second.2953:
 	lw	x5, x31, 8 ; ld
@@ -6428,7 +6430,7 @@ get_nvector_second.2953:
 	flw	f2, x2, 12
 	fsub	f1, f2, f1 ; fsub
 	lw	x10, x2, 8 ;nontail restore
-	flw	f2, x10, 8
+	flw	f2, x10, 4
 	lw	x5, x2, 4 ;nontail restore
 	fsw	f1, x2,  16 ; nontail, save
 	fsw	f2, x2,  20 ; nontail, save
@@ -6441,7 +6443,7 @@ get_nvector_second.2953:
 	flw	f2, x2, 20
 	fsub	f1, f2, f1 ; fsub
 	lw	x10, x2, 8 ;nontail restore
-	flw	f2, x10, 16
+	flw	f2, x10, 8
 	lw	x10, x2, 4 ;nontail restore
 	fsw	f1, x2,  24 ; nontail, save
 	fsw	f2, x2,  28 ; nontail, save
@@ -6492,9 +6494,9 @@ get_nvector_second.2953:
 	flw	f1, x2, 36
 	fsw	f1, x10, 0
 	flw	f1, x2, 40
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	flw	f1, x2, 44
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	jal	x0, be_cont.9449 ; then sentence ends
 be_else.9448:
 	lw	x10, x2, 4 ;nontail restore
@@ -6553,7 +6555,7 @@ be_else.9448:
 	flw	f2, x2, 40
 	fadd	f1, f2, f1 ; fadd
 	lw	x10, x2, 0 ;nontail restore
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	lw	x5, x2, 4 ;nontail restore
 	add	x10, x5, x0 ; args
 	sw	x1, x2, 60 ; nontail call directly starts
@@ -6582,7 +6584,7 @@ be_else.9448:
 	flw	f2, x2, 44
 	fadd	f1, f2, f1 ; fadd
 	lw	x10, x2, 0 ;nontail restore
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 be_cont.9449:
 	lw	x5, x2, 4 ;nontail restore
 	add	x10, x5, x0 ; args
@@ -6654,7 +6656,7 @@ utexture.2958:
 	addi	x2, x2, -24
 	lw	x1, x2, 20
 	lw	x10, x2, 4 ;nontail restore
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	lw	x5, x2, 8 ;nontail restore
 	add	x10, x5, x0 ; args
 	sw	x1, x2, 20 ; nontail call directly starts
@@ -6663,7 +6665,7 @@ utexture.2958:
 	addi	x2, x2, -24
 	lw	x1, x2, 20
 	lw	x10, x2, 4 ;nontail restore
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	li	x5, 1 ; set
 	lw	x6, x2, 12 ;nontail restore
 	bne	x6, x5, be_else.9452 ; tail if
@@ -6702,7 +6704,7 @@ utexture.2958:
 	addi	x2, x2, -32
 	lw	x1, x2, 28
 	lw	x5, x2, 0 ;nontail restore
-	flw	f1, x5, 16
+	flw	f1, x5, 8
 	lw	x5, x2, 8 ;nontail restore
 	sw	x10, x2, 24 ; nontail,save
 	fsw	f1, x2,  28 ; nontail, save
@@ -6761,13 +6763,13 @@ be_else.9457:
 be_cont.9458:
 be_cont.9454:
 	lw	x10, x2, 4 ;nontail restore
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	jalr	x0, x1, 0 ;tail unit
 be_else.9452:
 	li	x5, 2 ; set
 	bne	x6, x5, be_else.9460 ; tail if
 	lw	x5, x2, 0 ;nontail restore
-	flw	f1, x5, 8
+	flw	f1, x5, 4
 	li	x5, 1048576000 ; setli
 	fmvwx	f2, x5; fmv
 	fmul	f1, f1, f2
@@ -6792,7 +6794,7 @@ be_else.9452:
 	fmvwx	f3, x5; fmv
 	fsub	f1, f3, f1 ; fsub
 	fmul	f1, f2, f1
-	fsw	f1, x10, 8
+	fsw	f1, x10, 4
 	jalr	x0, x1, 0 ;tail unit
 be_else.9460:
 	li	x5, 3 ; set
@@ -6810,7 +6812,7 @@ be_else.9460:
 	flw	f2, x2, 36
 	fsub	f1, f2, f1 ; fsub
 	lw	x10, x2, 0 ;nontail restore
-	flw	f2, x10, 16
+	flw	f2, x10, 8
 	lw	x10, x2, 8 ;nontail restore
 	fsw	f1, x2,  40 ; nontail, save
 	fsw	f2, x2,  44 ; nontail, save
@@ -6872,14 +6874,14 @@ be_else.9460:
 	fmvwx	f2, x10; fmv
 	fmul	f2, f1, f2
 	lw	x10, x2, 4 ;nontail restore
-	fsw	f2, x10, 8
+	fsw	f2, x10, 4
 	li	x5, 1065353216 ; setli
 	fmvwx	f2, x5; fmv
 	fsub	f1, f2, f1 ; fsub
 	li	x5, 1132396544 ; setli
 	fmvwx	f2, x5; fmv
 	fmul	f1, f1, f2
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	jalr	x0, x1, 0 ;tail unit
 be_else.9462:
 	li	x5, 4 ; set
@@ -6911,7 +6913,7 @@ be_else.9462:
 	flw	f2, x2, 64
 	fmul	f1, f2, f1
 	lw	x10, x2, 0 ;nontail restore
-	flw	f2, x10, 16
+	flw	f2, x10, 8
 	lw	x5, x2, 8 ;nontail restore
 	fsw	f1, x2,  68 ; nontail, save
 	fsw	f2, x2,  72 ; nontail, save
@@ -7005,7 +7007,7 @@ be_cont.9466:
 	flw	f2, x2, 92
 	fsub	f1, f2, f1 ; fsub
 	lw	x10, x2, 0 ;nontail restore
-	flw	f2, x10, 8
+	flw	f2, x10, 4
 	lw	x10, x2, 8 ;nontail restore
 	fsw	f1, x2,  96 ; nontail, save
 	fsw	f2, x2,  100 ; nontail, save
@@ -7129,7 +7131,7 @@ be_cont.9470:
 	fmvwx	f2, x10; fmv
 	fdiv	f1, f1, f2
 	lw	x10, x2, 4 ;nontail restore
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	jalr	x0, x1, 0 ;tail unit
 be_else.9464:
 	jalr	x0, x1, 0 ;tail unit
@@ -7186,12 +7188,12 @@ be_else.9475:
 	flw	f2, x10, 0
 	fadd	f2, f2, f1 ; fadd
 	fsw	f2, x10, 0
-	flw	f2, x10, 8
+	flw	f2, x10, 4
 	fadd	f2, f2, f1 ; fadd
-	fsw	f2, x10, 8
-	flw	f2, x10, 16
+	fsw	f2, x10, 4
+	flw	f2, x10, 8
 	fadd	f1, f2, f1 ; fadd
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	jalr	x0, x1, 0 ;tail unit
 trace_reflections.2965:
 	lw	x6, x31, 32 ; ld
@@ -7451,12 +7453,12 @@ be_else.9490:
 	flw	f2, x10, 0
 	fadd	f2, f2, f1 ; fadd
 	fsw	f2, x10, 0
-	flw	f2, x10, 8
+	flw	f2, x10, 4
 	fadd	f2, f2, f1 ; fadd
-	fsw	f2, x10, 8
-	flw	f2, x10, 16
+	fsw	f2, x10, 4
+	flw	f2, x10, 8
 	fadd	f1, f2, f1 ; fadd
-	fsw	f1, x10, 16
+	fsw	f1, x10, 8
 	jalr	x0, x1, 0 ;tail unit
 be_else.9487:
 	lw	x10, x2, 72 ;nontail restore
@@ -8702,7 +8704,7 @@ write_rgb.3028:
 	addi	x2, x2, -8
 	lw	x1, x2, 4
 	lw	x10, x2, 0 ;nontail restore
-	flw	f1, x10, 8
+	flw	f1, x10, 4
 	sw	x1, x2, 4 ; nontail call directly starts
 	addi	x2, x2, 8
 	jal	x1, write_rgb_element.3026
@@ -8715,7 +8717,7 @@ write_rgb.3028:
 	addi	x2, x2, -8
 	lw	x1, x2, 4
 	lw	x10, x2, 0 ;nontail restore
-	flw	f1, x10, 16
+	flw	f1, x10, 8
 	sw	x1, x2, 4 ; nontail call directly starts
 	addi	x2, x2, 8
 	jal	x1, write_rgb_element.3026
@@ -8880,16 +8882,16 @@ pretrace_pixels.3033:
 	fadd	f2, f2, f3 ; fadd
 	lw	x5, x2, 44 ;nontail restore
 	fsw	f2, x5, 0
-	flw	f2, x10, 8
+	flw	f2, x10, 4
 	fmul	f2, f1, f2
 	flw	f4, x2, 40
 	fadd	f2, f2, f4 ; fadd
-	fsw	f2, x5, 8
-	flw	f2, x10, 16
+	fsw	f2, x5, 4
+	flw	f2, x10, 8
 	fmul	f1, f1, f2
 	flw	f2, x2, 36
 	fadd	f1, f1, f2 ; fadd
-	fsw	f1, x5, 16
+	fsw	f1, x5, 8
 	li	x10, 0 ; set
 	add	x30, x5, x0 ; args
 	add	x5, x10, x0 ; args
@@ -9029,13 +9031,13 @@ pretrace_line.3040:
 	lw	x5, x2, 16 ;nontail restore
 	flw	f3, x5, 0
 	fadd	f2, f2, f3 ; fadd
-	flw	f3, x10, 8
+	flw	f3, x10, 4
 	fmul	f3, f1, f3
-	flw	f4, x5, 8
+	flw	f4, x5, 4
 	fadd	f3, f3, f4 ; fadd
-	flw	f4, x10, 16
+	flw	f4, x10, 8
 	fmul	f1, f1, f4
-	flw	f4, x5, 16
+	flw	f4, x5, 8
 	fadd	f1, f1, f4 ; fadd
 	lw	x10, x2, 12 ;nontail restore
 	lw	x10, x10, 0 ; ld
@@ -10119,7 +10121,7 @@ setup_rect_reflection.3108:
 	addi	x2, x2, -32
 	lw	x1, x2, 28
 	lw	x10, x2, 16 ;nontail restore
-	flw	f2, x10, 8
+	flw	f2, x10, 4
 	fsw	f1, x2,  28 ; nontail, save
 	fadd	f1, f0, f2 ; args
 	sw	x1, x2, 36 ; nontail call directly starts
@@ -10128,7 +10130,7 @@ setup_rect_reflection.3108:
 	addi	x2, x2, -40
 	lw	x1, x2, 36
 	lw	x10, x2, 16 ;nontail restore
-	flw	f2, x10, 16
+	flw	f2, x10, 8
 	fsw	f1, x2,  32 ; nontail, save
 	fadd	f1, f0, f2 ; args
 	sw	x1, x2, 36 ; nontail call directly starts
@@ -10158,7 +10160,7 @@ setup_rect_reflection.3108:
 	lw	x6, x2, 12 ;nontail restore
 	addi	x7, x6, 2 ; addi
 	lw	x8, x2, 16 ;nontail restore
-	flw	f3, x8, 8
+	flw	f3, x8, 4
 	flw	f1, x2, 24
 	flw	f2, x2, 28
 	flw	f4, x2, 36
@@ -10176,7 +10178,7 @@ setup_rect_reflection.3108:
 	lw	x6, x2, 12 ;nontail restore
 	addi	x6, x6, 3 ; addi
 	lw	x7, x2, 16 ;nontail restore
-	flw	f4, x7, 16
+	flw	f4, x7, 8
 	flw	f1, x2, 24
 	flw	f2, x2, 28
 	flw	f3, x2, 32
@@ -10266,7 +10268,7 @@ setup_surface_reflection.3111:
 	flw	f2, x2, 32
 	fmul	f1, f1, f2
 	lw	x10, x2, 16 ;nontail restore
-	flw	f3, x10, 8
+	flw	f3, x10, 4
 	fsub	f1, f1, f3 ; fsub
 	li	x5, 1073741824 ; setli
 	fmvwx	f3, x5; fmv
@@ -10284,7 +10286,7 @@ setup_surface_reflection.3111:
 	flw	f2, x2, 32
 	fmul	f1, f1, f2
 	lw	x10, x2, 16 ;nontail restore
-	flw	f2, x10, 16
+	flw	f2, x10, 8
 	fsub	f4, f1, f2 ; fsub
 	flw	f1, x2, 28
 	flw	f2, x2, 40
@@ -10386,10 +10388,10 @@ rt.3116:
 	sw	x10, x17, 0
 	sw	x5, x17, 4
 	li	x17, 2 ; set
-	mul	x17, x10, x17 ; mul
+	div	x17, x10, x17 ; div
 	sw	x17, x18, 0
 	li	x17, 2 ; set
-	mul	x5, x5, x17 ; mul
+	div	x5, x5, x17 ; div
 	sw	x5, x18, 4
 	li	x5, 1124073472 ; setli
 	fmvwx	f1, x5; fmv
