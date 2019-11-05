@@ -306,7 +306,7 @@ let f oc (Prog(data, fundefs, e)) =
   stackmap := [];
   Printf.fprintf oc "min_caml_start:\n";
   Printf.fprintf oc "\tfmvwx\tf0, x0\n";
-  Printf.fprintf oc "\tli\tx2, 0x200000\n";
+  Printf.fprintf oc "\tli\tx2, 1300000\n";
   Printf.fprintf oc "\tli\tx3, 0x0000000\n";    
   g oc (NonTail("x0"), e);
   (*  Printf.fprintf oc "\tadd\tx10, x4, x0 ; set output to a0 register\n"; (*デバッグ結果をx10に出力する*)*)
