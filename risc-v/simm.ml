@@ -1,6 +1,4 @@
 (*即値最適化*)
-
-
 open Asm
 
 let rec g env = function (* 命令列の13bit即値最適化 (caml2html: simm13_g) *)

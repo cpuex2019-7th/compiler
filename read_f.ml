@@ -1,12 +1,10 @@
 let rec read_float_min_dec x i =
   let a = read () in
   if a <= 32 then -1.0 *. x
-  else if a = 10 then -1.0 *. x
   else read_float_min_dec (x +. (i *. (float_of_int (a - 48)))) (i /. 10.0) in
 let rec read_float_dec x i =  
   let a = read () in
   if a <= 32 then x
-  else if a = 10 then x
   else read_float_dec (x +. (i *. (float_of_int (a - 48)))) (i /. 10.0) in
 let rec read_float _ =
   let rec read_float_min x =

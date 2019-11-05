@@ -1,6 +1,6 @@
 min_caml_start:
 	fmvwx	f0, x0
-	li	x2, 0x1f00000
+	li	x2, 0x1000000
 	li	x3, 0x0000000
 	li	x10, 1 ; set
 	li	x5, 0 ; set
