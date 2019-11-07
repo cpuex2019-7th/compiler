@@ -101,13 +101,13 @@ min_caml_read_int:
 	sw	x1, x2, 0
 	addi	x2, x2, 4
 	jal	x1, read
-	slli	x5, x10, 4
+	slli	x5, x10, 8
 	jal	x1, read
 	add	x5, x5, x10
-	slli	x5, x5, 4
+	slli	x5, x5, 8
 	jal	x1, read
 	add	x5, x5, x10
-	slli	x5, x5, 4
+	slli	x5, x5, 8
 	jal	x1, read
 	add	x10, x5, x10	
 	addi	x2, x2, -4
@@ -118,13 +118,13 @@ min_caml_read_float:
 	sw      x1, x2, 0
         addi    x2, x2, 4
         jal     x1, read
-	slli    x5, x10, 4
+	slli    x5, x10, 8
 	jal     x1, read
 	add     x5, x5, x10
-	slli    x5, x5, 4
+	slli    x5, x5, 8
 	jal     x1, read
         add     x5, x5, x10
-	slli    x5, x5, 4
+	slli    x5, x5, 8
 	jal     x1, read
 	add     x10, x5, x10
 	fmvwx	f1, x10
