@@ -1,7 +1,13 @@
 min_caml_start:
 	fmvwx	f0, x0
-	li	x2, 0x1000000
+	li	x2, 1300000
 	li	x3, 0x0000000
+	li	x10, 0xaa
+	sw	x1, x2, 0 ; nontail call directly starts
+	addi	x2, x2, 4
+	jal	x1, write
+	addi	x2, x2, -4
+	lw	x1, x2, 0
 	li	x10, 1 ; set
 	li	x5, 0 ; set
 	sw	x1, x2, 4 ; nontail call directly starts
@@ -996,8 +1002,8 @@ min_caml_start:
 	sw	x19, x31, 12
 	sw	x9, x31, 8
 	sw	x5, x31, 4
-	li	x10, 512 ; set
-	li	x5, 512 ; set
+	li	x10, 2 ; set
+	li	x5, 2 ; set
 	sw	x1, x2, 148 ; nontail call closure routine starts
 	lw	x30, x31, 0
 	addi	x2, x2, 152
