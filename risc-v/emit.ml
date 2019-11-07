@@ -307,7 +307,13 @@ let f oc (Prog(data, fundefs, e)) =
   Printf.fprintf oc "min_caml_start:\n";
   Printf.fprintf oc "\tfmvwx\tf0, x0\n";
   Printf.fprintf oc "\tli\tx2, 1300000\n";
-  Printf.fprintf oc "\tli\tx3, 0x0000000\n";    
+  Printf.fprintf oc "\tli\tx3, 0x0000000\n";
+  Printf.fprintf oc "\tli\tx10, 0xaa\n";
+  Printf.fprintf oc "\tsw\t%s, %s, %d ; nontail call directly starts\n" (rename_reg reg_ra) (rename_reg reg_sp) 0;
+  Printf.fprintf oc "\taddi\t%s, %s, %d\n"(rename_reg reg_sp) (rename_reg reg_sp) 4;
+  Printf.fprintf oc "\tjal\t%s, write\n" (rename_reg reg_ra) ;
+  Printf.fprintf oc "\taddi\t%s, %s, -%d\n" (rename_reg reg_sp) (rename_reg reg_sp) 4;
+  Printf.fprintf oc "\tlw\t%s, %s, %d\n" (rename_reg reg_ra) (rename_reg reg_sp) 0;
   g oc (NonTail("x0"), e);
   (*  Printf.fprintf oc "\tadd\tx10, x4, x0 ; set output to a0 register\n"; (*デバッグ結果をx10に出力する*)*)
   Printf.fprintf oc "\tjalr\tx0, x1, 0\n";
