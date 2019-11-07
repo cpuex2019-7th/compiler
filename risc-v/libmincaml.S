@@ -19,7 +19,6 @@ read:
 	sw x5, sp, 0
 	sw x6, sp, 4
 	sw x7, sp, 8
-	sw x8, sp, 12
 	li x5, 0x7F000000           ; base addr of uart
 	lbu x6, x5, 8                ; read control reg
 	andi x6, x6, 1	; get only "Rx FIFO Valid Data"
@@ -28,7 +27,6 @@ read:
 	j read                      ; if no data in uart rx fifo, we have to wait.
 read_actual:        
 	lbu a0, x5, 0; read from rx fifo
-	lw x8, sp, 12
 	lw x7, sp, 8
 	lw x6, sp, 4
 	lw x5, sp, 0
@@ -103,13 +101,13 @@ min_caml_read_int:
 	jal	x1, read
 	slli	x5, x10, 8
 	jal	x1, read
-	add	x5, x5, x10
+	or	x5, x5, x10
 	slli	x5, x5, 8
 	jal	x1, read
-	add	x5, x5, x10
+	or	x5, x5, x10
 	slli	x5, x5, 8
 	jal	x1, read
-	add	x10, x5, x10	
+	or	x10, x5, x10	
 	addi	x2, x2, -4
 	lw	x1, x2, 0
 	jalr	x0, x1, 0
@@ -120,13 +118,13 @@ min_caml_read_float:
         jal     x1, read
 	slli    x5, x10, 8
 	jal     x1, read
-	add     x5, x5, x10
+	or     x5, x5, x10
 	slli    x5, x5, 8
 	jal     x1, read
-        add     x5, x5, x10
+        or     x5, x5, x10
 	slli    x5, x5, 8
 	jal     x1, read
-	add     x10, x5, x10
+	or     x10, x5, x10
 	fmvwx	f1, x10
         addi    x2, x2, -4
 	lw	x1, x2,	0
