@@ -179,7 +179,7 @@ int main(int argc, char *argv[]){
     exit(1);
   }
 
-  load_sld_file(argv[1], 0);
+  load_sld_file(argv[1], 1);
 
   FILE *fp = fopen(argv[2], "wb");
   if(fp == NULL){
