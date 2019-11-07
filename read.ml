@@ -7,7 +7,6 @@ let rec read_int _ =
     let a = read () in
     if a < 33 then x
     else if a = 45 then read_int_min x
-    else if a = 10 then x
     else read_int_intl ((x*10) + a - 48)
   in read_int_intl 0
 in print_int (read_int ())

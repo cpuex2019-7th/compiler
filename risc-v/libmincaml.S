@@ -100,7 +100,8 @@ min_caml_print_char:
 
 
 
-read_int_min.26:
+
+read_int_min.22:
 	sw	x10, x2, 0 ; nontail,save
 	sw	x1, x2, 4 ; nontail call directly starts
 	addi	x2, x2, 8
@@ -108,26 +109,19 @@ read_int_min.26:
 	addi	x2, x2, -8
 	lw	x1, x2, 4
 	li	x5, 33 ; set
-	blt	x10, x5, read_int_else.61 ; tail if
-	li	x5, 10 ; set
-	bne	x10, x5, read_int_else.62 ; tail if
-	li	x10, -1 ; set
-	lw	x5, x2, 0 ;nontail restore
-	mul	x10, x10, x5 ; mul
-	jalr	x0, x1, 0 ;tail int return
-read_int_else.62:
+	blt	x10, x5, read_int_else.53 ; tail if
 	li	x5, 10 ; set
 	lw	x6, x2, 0 ;nontail restore
 	mul	x5, x6, x5 ; mul
 	add	x10, x5, x10 ; add
 	addi	x10, x10, -48 ; addi
-	jal	x0, read_int_min.26 ; tail call directly routine
-read_int_else.61:
+	jal	x0, read_int_min.22 ; tail call directly routine
+read_int_else.53:
 	li	x10, -1 ; set
 	lw	x5, x2, 0 ;nontail restore
 	mul	x10, x10, x5 ; mul
 	jalr	x0, x1, 0 ;tail int return
-read_int_intl.32:
+read_int_intl.28:
 	sw	x10, x2, 0 ; nontail,save
 	sw	x1, x2, 4 ; nontail call directly starts
 	addi	x2, x2, 8
@@ -135,29 +129,30 @@ read_int_intl.32:
 	addi	x2, x2, -8
 	lw	x1, x2, 4
 	li	x5, 33 ; set
-	blt	x10, x5, read_int_else.63 ; tail if
+	blt	x10, x5, read_int_else.54 ; tail if
 	li	x5, 45 ; set
-	bne	x10, x5, read_int_else.64 ; tail if
+	bne	x10, x5, read_int_else.55 ; tail if
 	lw	x10, x2, 0 ;nontail restore
-	jal	x0, read_int_min.26 ; tail call directly routine
-read_int_else.64:
-	li	x5, 10 ; set
-	bne	x10, x5, read_int_else.65 ; tail if
-	lw	x10, x2, 0 ;nontail restore
-	jalr	x0, x1, 0 ;tail int return
-read_int_else.65:
+	jal	x0, read_int_min.22 ; tail call directly routine
+read_int_else.55:
 	li	x5, 10 ; set
 	lw	x6, x2, 0 ;nontail restore
 	mul	x5, x6, x5 ; mul
 	add	x10, x5, x10 ; add
 	addi	x10, x10, -48 ; addi
-	jal	x0, read_int_intl.32 ; tail call directly routine
-read_int_else.63:
+	jal	x0, read_int_intl.28 ; tail call directly routine
+read_int_else.54:
 	lw	x10, x2, 0 ;nontail restore
 	jalr	x0, x1, 0 ;tail int return
-min_caml_read_int:	
+min_caml_read_int:
 	li	x10, 0 ; set
-	jal	x0, read_int_intl.32 ; tail call directly routine
+	jal	x0, read_int_intl.28 ; tail call directly routine	
+	
+
+
+
+
+
 
 
 
