@@ -2,3 +2,5 @@
 *.ppm
 raytracer.*
 *.symbols
+*.out
+*.o

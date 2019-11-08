@@ -11,7 +11,7 @@ Basic usage is same as original min-caml compiler. (https://github.com/esumii/mi
 * Test is executed by following code. Assembler(https://github.com/cpuex2019-7th/assembler) and simulator (https://github.com/cpuex2019-7th/simulator) have to be pre-installed.
 ```make riscv_test```
 ## Options
-* `-g` min-caml code is compiled with some library neccesary for raytracer program
+* `-g` min-caml code is compiled with some library neccesary for raytracing program
 
 ## Simulating raytracer program
 Raytracer program can be simulated by following code.(Assembler and simulater are neccessary)

@@ -34,7 +34,33 @@ read_actual:
 
 	
 
-	
+min_camlprintint_div10:
+        fcvtsw  f1, x10         ;f1にx10が浮動小数で入っている
+        li      x6, 1036831949 ; 0.1
+        fmvwx   f2, x6         ; fmv
+        fmul    f1, f1, f2      ; f1 <- f1 * 0.1
+        fle     x6, f1, f0     ; floorの実行
+        bne     x6, x0, div10printint_floor_neg ; f1 < 0 then jump
+        li      x6, 1056964608 ; 0.5
+        fmvwx   f2, x6
+        fsub    f1, f1, f2
+        fcvtws  x6, f1
+        jal    x0, be_else441
+div10printint_floor_neg:
+        fadd    f3, f0, f1      ; f3 <- f1
+        li      x6, 1056964608 ; 0.5
+        fmvwx   f2, x6
+        fadd    f1, f1, f2
+        fcvtws  x6, f1
+        fcvtsw  f1, x6         ;f1 <- truncate f1
+        feq     x6, f1, f3     ;x10 <- truncate f1 = f3(=original f1)
+        bne     x6, x0, div10printint_neg_int ; if f1 was originally int, then jump
+        fcvtws  x6, f1                ; if f1 is not int, you must subtract 1 from int of truncate
+        addi    x6, x6, -1
+        jal    x0, be_else441
+div10printint_neg_int:
+	fcvtws	x6, f1
+        jal    x0, be_else441	
 
 	
 ;;; min_caml_print_int
@@ -48,8 +74,9 @@ be_else45:
     addi    x10, x0, 45
     jal    x0, write ; tail call directly routine
 be_else44:
-    addi x11, x0, 10
-    div    x6, x10, x11
+	addi x11, x0, 10
+	jal x0, min_camlprintint_div10 
+be_else441:	
     sw    x10, x2, 0 ; nontail,save
     add    x10, x6, x0 ; args
     sw    x1, x2, 4 ; nontail call directly starts
@@ -170,6 +197,36 @@ min_caml_fabs:
 min_caml_sqrt:
 	fsqrt	f1, f1
 	jalr	x0, x1, 0
+
+min_caml_div10:
+	fcvtsw  f1, x10 	;f1にx10が浮動小数で入っている
+	li	x10, 1036831949 ; 0.1
+	fmvwx	f2, x10		; fmv
+	fmul	f1, f1, f2	; f1 <- f1 * 0.1
+	fle     x10, f1, f0	; floorの実行
+        bne     x10, x0, div10_floor_neg ; f1 < 0 then jump
+        li      x10, 1056964608 ; 0.5
+        fmvwx   f2, x10
+        fsub    f1, f1, f2
+        fcvtws  x10, f1
+        jalr    x0, x1, 0
+div10_floor_neg:
+        fadd    f3, f0, f1      ; f3 <- f1
+        li      x10, 1056964608 ; 0.5
+        fmvwx   f2, x10
+        fadd    f1, f1, f2
+        fcvtws  x10, f1
+        fcvtsw  f1, x10         ;f1 <- truncate f1
+        feq     x10, f1, f3     ;x10 <- truncate f1 = f3(=original f1)
+        bne     x10, x0, div10_neg_int ; if f1 was originally int, then jump
+        fcvtws  x10, f1                ; if f1 is not int, you must subtract 1 from int of truncate
+        addi    x10, x10, -1
+        jalr    x0, x1, 0
+div10_neg_int:
+        jalr    x0, x1, 0	
+
+	
+	
 
 min_caml_floor:
 	fle	x10, f1, f0

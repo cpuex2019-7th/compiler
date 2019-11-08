@@ -1,7 +1,7 @@
 OCOPT = -ccopt -O2
-OCAMLBASE=/usr/bin/
-OCAMLC=$(OCAMLBASE)/ocamlc
-OCAMLOPT=$(OCAMLBASE)/ocamlopt
+OCAMLBASE=/usr/local/bin/
+OCAMLC=$(OCAMLBASE)ocamlc
+OCAMLOPT=$(OCAMLBASE)ocamlopt
 
 all: native
 

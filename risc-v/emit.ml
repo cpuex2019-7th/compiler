@@ -69,6 +69,7 @@ and g' oc = function (* 各命令のアセンブリ生成 (caml2html: emit_gprim
   | NonTail(x), Mul(y, z') -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tmul\t%s, %s, %s ; mul\n" x y (pp_id_or_imm z')
   | NonTail(x), Div(y, z') -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tdiv\t%s, %s, %s ; div\n" x y (pp_id_or_imm z')        
   | NonTail(x), SLL(y, z') -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tslli\t%s, %s, %s ; sll\n" x y (pp_id_or_imm z')
+  | NonTail(x), Srai(y, z') -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tsrai\t%s, %s, %s ; sll\n" x y (pp_id_or_imm z') (*z'には数字(2)しかないはず*)
   | NonTail(x), Ld(y, z') -> (*オフセットの値をどこかのレジスタに入れるようにすれば命令数は減るが、使うレジスタが増える*) let x = rename_reg x in let y = rename_reg y in
      (match z' with
       | V(_) ->
@@ -147,7 +148,7 @@ and g' oc = function (* 各命令のアセンブリ生成 (caml2html: emit_gprim
      g' oc (NonTail(Id.gentmp Type.Unit), exp);
      Printf.fprintf oc "\tjalr\t%s, %s, 0 ;tail unit\n" (rename_reg reg_z) (rename_reg reg_ra)
   (*      Printf.fprintf oc "\tnop\n"*)
-  | Tail, (Set _ | SetL _ |SetLi _ | Mov _ | Neg _ | Add _ | Addi _| Sub _ | Mul _ | Div _ | SLL _ | Ld _ | Feq _ | Fle _ as exp) -> (*結果は先頭のレジスタに入っている。*)
+  | Tail, (Set _ | SetL _ |SetLi _ | Mov _ | Neg _ | Add _ | Addi _| Sub _ | Mul _ | Div _ | SLL _ | Srai _ | Ld _ | Feq _ | Fle _ as exp) -> (*結果は先頭のレジスタに入っている。*)
      g' oc (NonTail(regs.(0)), exp);
      Printf.fprintf oc "\tjalr\t%s, %s, 0 ;tail int return\n" (rename_reg reg_z) (rename_reg reg_ra)
   | Tail, (FMovD _ | FNegD _ | FAddD _ | FSubD _ | FMulD _ | FDivD _ | LdDF _ | Fmv _ as exp) -> 

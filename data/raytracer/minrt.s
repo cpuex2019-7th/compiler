@@ -1002,8 +1002,8 @@ min_caml_start:
 	sw	x19, x31, 12
 	sw	x9, x31, 8
 	sw	x5, x31, 4
-	li	x10, 2 ; set
-	li	x5, 2 ; set
+	li	x10, 512 ; set
+	li	x5, 512 ; set
 	sw	x1, x2, 148 ; nontail call closure routine starts
 	lw	x30, x31, 0
 	addi	x2, x2, 152
@@ -10393,11 +10393,9 @@ rt.3116:
 	lw	x19, x31, 4 ; ld
 	sw	x10, x17, 0
 	sw	x5, x17, 4
-	li	x17, 2 ; set
-	div	x17, x10, x17 ; div
+	srai	x17, x10, 1 ; sll
 	sw	x17, x18, 0
-	li	x17, 2 ; set
-	div	x5, x5, x17 ; div
+	srai	x5, x5, 1 ; sll
 	sw	x5, x18, 4
 	li	x5, 1124073472 ; setli
 	fmvwx	f1, x5; fmv
