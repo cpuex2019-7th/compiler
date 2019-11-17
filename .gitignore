@@ -4,3 +4,5 @@ raytracer.*
 *.symbols
 *.out
 *.o
+*.bin
+raytrace.*

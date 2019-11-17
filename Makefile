@@ -44,6 +44,25 @@ fabs truncate floor fsqrt sin
 
 #RISCVTESTSFLOAT = fibf
 
+SLD = data/raytracer/sld/contest.sld
+BIN = data/raytracer/sld/contest.sld.bin
+STAT = stat.txt
+IMG = out.ppm
+ITER = 0
+INLINE = 1000
+
+raytrace: data/raytracer/raytrace $(BIN) data/raytracer/raytrace.symbols
+	cpuex_sim $< -i $(BIN) -o $(IMG) --symbols data/raytracer/raytrace.symbols --statout $(STAT)
+.PRECIOUS: data/raytracer/minrt.s data/raytracer/contest.sld.bin data/raytracer/raytrace data/raytracer/raytrace.symbols
+TRASH = data/raytracer/minrt.s data/raytracer/contest.sld.bin data/raytracer/raytrace data/raytracer/raytrace.symbols
+data/raytracer/minrt.s: $(RESULT) data/raytracer/minrt.ml
+	./$(RESULT) -g -sim data/raytracer/minrt -iter $(ITER) -inline $(INLINE)
+data/raytracer/sld/contest.sld.bin: $(SLD)
+	cpuex_sld2bin $(SLD) $@
+data/raytracer/raytrace data/raytracer/raytrace.symbols: data/raytracer/minrt.s libmincaml.S 
+	cpuex_asm data/raytracer/raytrace data/raytracer/minrt.s libmincaml.S
+
+
 do_test: $(TESTS:%=test/%.cmp)
 
 .PRECIOUS: test/%.s test/% test/%.res test/%.ans test/%.cmp
@@ -70,7 +89,7 @@ riscv_test: $(RISCVTESTSINT:%=riscv-test/%.cmp) #$(RISCVTESTSFLOAT:%=riscv-test/
 TRASH = $(RISCVTESTSINT:%=riscv-test/%.s) $(RISCVTESTSINT:%=riscv-test/%) $(RISCVTESTSINT:%=riscv-test/%.res) $(RISCVTESTSINT:%=riscv-test/%.ans) $(RISCVTESTSINT:%=riscv-test/%.cmp) $(RISCVTESTINT:%=riscv-test/sub/%.ml)#$(RISCVTESTSFLOAT:%=riscv-test/%.s) $(RISCVTESTSFLOAT:%=riscv-test/%) $(RISCVTESTSFLOAT:%=riscv-test/%.res) $(RISCVTESTSFLOAT:%=riscv-test/%.ans) $(RISCVTESTSFLOAT:%=riscv-test/%.cmp)
 
 riscv-test/%.s: $(RESULT) riscv-test/%.ml
-	./$(RESULT) riscv-test/$* -g
+	./$(RESULT) riscv-test/$* -g -sim
 riscv-test/%: riscv-test/%.s libmincaml.S 
 	$(ASM) $@ $^
 #$(RISCVTESTSFLOAT:%=riscv-test/%.res): $(RISCVTESTSFLOAT:%=riscv-test/%)

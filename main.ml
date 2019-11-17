@@ -1,5 +1,6 @@
 let limit = ref 1000
 let gflag = ref 0
+let aaflag = ref 0          
 
 let rec iter n e = (* 最適化処理をくりかえす (caml2html: main_iter) *)
   Format.eprintf "iteration %d@." n;
@@ -17,7 +18,7 @@ let lexbuf outchan l glb_l= (* バッファをコンパイルしてチャンネルへ出力する (cam
   Id.counter := 0;
   Typing.extenv := M.empty;
   if (!gflag = 0) then
-  Emit.f outchan (*generate assembly code*)
+  Emit.f !aaflag outchan (*generate assembly code*)
     (RegAlloc.f (*register allocation*)
        (Simm.f (*即値最適化*)
           (Virtual.f (*generate vurtual machine code*)
@@ -28,7 +29,7 @@ let lexbuf outchan l glb_l= (* バッファをコンパイルしてチャンネルへ出力する (cam
                          (Typing.f (*type check *)
                             (Parser.exp Lexer.token l))))))))) (*parse the buffer*)
   else
-    Emit.f outchan (*generate assembly code*)
+    Emit.f !aaflag outchan (*generate assembly code*)
     (RegAlloc.f (*register allocation*)
        (Simm.f (*即値最適化*)
           (Virtual.f (*generate vurtual machine code*)
@@ -58,10 +59,11 @@ let () = (* ここからコンパイラの実行が開始される (caml2html: main_entry) *)
   Arg.parse
     [("-inline", Arg.Int(fun i -> Inline.threshold := i), "maximum size of functions inlined");
      ("-iter", Arg.Int(fun i -> limit := i), "maximum number of optimizations iterated");
-     ("-g", Arg.Unit(fun _ -> gflag := 1), "include or not globals.ml")](*Unitって怪しいけど-gをつけたとき,globals.mlをincludeしてmin-rtをコンパイルできるようになる*)
+     ("-g", Arg.Unit(fun _ -> gflag := 1), "include or not globals.ml");(*Unitって怪しいけど-gをつけたとき,globals.mlをincludeしてmin-rtをコンパイルできるようになる*)
+    ("-sim", Arg.Unit(fun _ -> aaflag := 1), "do not write 0xaa first")]
     (fun s -> files := !files @ [s])
     ("Mitou Min-Caml Compiler (C) Eijiro Sumii\n" ^
-     Printf.sprintf "usage: %s [-inline m] [-iter n] [-g]...filenames without \".ml\"..." Sys.argv.(0));
+     Printf.sprintf "usage: %s [-inline m] [-iter n] [-g] [-sim] ...filenames without \".ml\"..." Sys.argv.(0));
   List.iter (*apply the function "file" to the all files in the arguments*)
     (fun f -> ignore (file f)) 
     !files
