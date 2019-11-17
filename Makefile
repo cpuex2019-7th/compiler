@@ -48,8 +48,8 @@ SLD = data/raytracer/sld/contest.sld
 BIN = data/raytracer/sld/contest.sld.bin
 STAT = stat.txt
 IMG = out.ppm
-ITER = 0
-INLINE = 1000
+ITER = 1000
+INLINE = 0
 
 raytrace: data/raytracer/raytrace $(BIN) data/raytracer/raytrace.symbols
 	cpuex_sim $< -i $(BIN) -o $(IMG) --symbols data/raytracer/raytrace.symbols --statout $(STAT)

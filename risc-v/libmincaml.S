@@ -47,20 +47,17 @@ min_camlprintint_div10:
         fcvtws  x6, f1
         jal    x0, be_else441
 div10printint_floor_neg:
+	feq	x6, f0, f1
+	bne	x6, x0, div10printint_floor_zero
         fadd    f3, f0, f1      ; f3 <- f1
         li      x6, 1056964608 ; 0.5
         fmvwx   f2, x6
         fadd    f1, f1, f2
         fcvtws  x6, f1
-        fcvtsw  f1, x6         ;f1 <- truncate f1
-        feq     x6, f1, f3     ;x10 <- truncate f1 = f3(=original f1)
-        bne     x6, x0, div10printint_neg_int ; if f1 was originally int, then jump
-        fcvtws  x6, f1                ; if f1 is not int, you must subtract 1 from int of truncate
-        addi    x6, x6, -1
-        jal    x0, be_else441
-div10printint_neg_int:
-	fcvtws	x6, f1
-        jal    x0, be_else441	
+        jalr    x0, x1, 0
+div10printint_floor_zero:
+        add     x10, x0, x0
+        jalr    x0, x1, 0
 
 	
 ;;; min_caml_print_int
@@ -197,35 +194,31 @@ min_caml_fabs:
 min_caml_sqrt:
 	fsqrt	f1, f1
 	jalr	x0, x1, 0
-
+	
 min_caml_div10:
 	fcvtsw  f1, x10 	;f1にx10が浮動小数で入っている
 	li	x10, 1036831949 ; 0.1
 	fmvwx	f2, x10		; fmv
 	fmul	f1, f1, f2	; f1 <- f1 * 0.1
-	fle     x10, f1, f0	; floorの実行
-        bne     x10, x0, div10_floor_neg ; f1 < 0 then jump
-        li      x10, 1056964608 ; 0.5
-        fmvwx   f2, x10
-        fsub    f1, f1, f2
-        fcvtws  x10, f1
-        jalr    x0, x1, 0
-div10_floor_neg:
+	fle     x10, f0, f1	; floorの実行
+        bne     x10, x0, div10_floor_pos ; f1 >= 0 then jump
         fadd    f3, f0, f1      ; f3 <- f1
         li      x10, 1056964608 ; 0.5
         fmvwx   f2, x10
         fadd    f1, f1, f2
         fcvtws  x10, f1
-        fcvtsw  f1, x10         ;f1 <- truncate f1
-        feq     x10, f1, f3     ;x10 <- truncate f1 = f3(=original f1)
-        bne     x10, x0, div10_neg_int ; if f1 was originally int, then jump
-        fcvtws  x10, f1                ; if f1 is not int, you must subtract 1 from int of truncate
-        addi    x10, x10, -1
-        jalr    x0, x1, 0
-div10_neg_int:
         jalr    x0, x1, 0	
-
-	
+div10_floor_pos:
+	feq	x10, f0, f1
+	bne	x10, x0, div10_zero
+	li      x10, 1056964608 ; 0.5
+        fmvwx   f2, x10
+        fsub    f1, f1, f2
+        fcvtws  x10, f1
+        jalr    x0, x1, 0
+div10_zero:
+	add	x10, x0, x0
+	jalr	x0, x1, 0
 	
 
 min_caml_floor:
@@ -260,20 +253,26 @@ min_caml_int_of_float: ;int_of_floatは四捨五入
 	jalr	x0, x1, 0
 	
 min_caml_truncate: 		; 小数点以下切り捨て(ただし、0以下は切り上げ)(0.5ぴったりの時にバグりそう)
-	fle	x10, f1, f0
-	beq	x10, x0, tr_pos
+	fle	x10, f0, f1
+	beq	x10, x0, tr_neg
+tr_pos:
+	feq	x10, f0, f1
+        bne	x10, x0, tr_zero
+	li	x10, 1056964608 ; 0.5
+	fmvwx	f2, x10
+	fsub	f1, f1, f2
+	fcvtws	x10, f1
+	jalr	x0, x1, 0
 tr_neg:	
 	li	x10, 1056964608 ; 0.5
 	fmvwx	f2, x10
 	fadd	f1, f1, f2
 	fcvtws	x10, f1
 	jalr	x0, x1, 0
-tr_pos:
-	li	x10, 1056964608 ; 0.5
-	fmvwx	f2, x10
-	fsub	f1, f1, f2
-	fcvtws	x10, f1
+tr_zero:
+	add	x10, x0, x0
 	jalr	x0, x1, 0
+
 	
 min_caml_float_of_int:
 	fcvtsw	f1, x10
