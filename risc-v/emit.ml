@@ -56,8 +56,12 @@ let rec g oc = function (* 命令列のアセンブリ生成 (caml2html: emit_g)
 and g' oc = function (* 各命令のアセンブリ生成 (caml2html: emit_gprime) *)
   (* 末尾でなかったら計算結果をdestにセット (caml2html: emit_nontail) *)
   | NonTail(_), Nop -> ()
-  | NonTail(x), Set(i) -> let x = rename_reg x in Printf.fprintf oc "\tli\t%s, %d ; set\n" x i (*iの大きさでliとaddiを変えた方が良い？*)
-  | NonTail(x), SetL(Id.L(y)) -> let y = rename_reg y in let x = rename_reg x in Printf.fprintf oc "\tli\t%s, %%lo(%s); setl\n" x y
+  | NonTail(x), Set(i) -> let x = rename_reg x in
+                          if -2048 <= i && i < 2048 then(*iの大きさでliとaddiを変える*)
+                            Printf.fprintf oc "\taddi\t%s, %s, %d ; set\n" x (rename_reg reg_z) i 
+                          else
+                            Printf.fprintf oc "\tli\t%s, %d ; set\n" x i 
+  | NonTail(x), SetL(Id.L(y)) -> let y = rename_reg y in let x = rename_reg x in Printf.fprintf oc "\tli\t%s, %%lo(%s); setl\n" x  y
   | NonTail(x), SetLi(Id.L(y)) -> let x = rename_reg x in Printf.fprintf oc "\tli\t%s, %s ; setli\n" x y
   | NonTail(x), Fmv(y) -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tfmvwx\t%s, %s; fmv\n" x y
   | NonTail(x), Mov(y) when x = y -> ()
@@ -203,7 +207,10 @@ and g' oc = function (* 各命令のアセンブリ生成 (caml2html: emit_gprim
      Printf.fprintf oc "\tjalr\t%s, %s, 0 ; tail call closure routine\n" (rename_reg reg_z) (rename_reg reg_sw)
   | Tail, CallDir(Id.L(x), ys, zs) -> (* 末尾呼び出し *)
      g'_args oc [] ys zs;
-     Printf.fprintf oc "\tjal\t%s, %s ; tail call directly routine\n" (rename_reg reg_z) (rename_reg x)
+     Printf.fprintf oc "\tli\t%s, %%lo(%s) ;set address for call dir routine\n" (rename_reg reg_cl) (rename_reg x);
+     Printf.fprintf oc "\tjalr\t%s, %s, 0 ; tail call dir routine\n" (rename_reg reg_z) (rename_reg reg_cl)
+       (*labelが近ければこれでやりたい
+     Printf.fprintf oc "\tjal\t%s, %s ; tail call directly routine\n" (rename_reg reg_z) (rename_reg x)*)
   | NonTail(a), CallCls(x, ys, zs) -> (*closureを用いた関数呼び出し*)
       g'_args oc [(x, reg_cl)] ys zs;
       let ss = stacksize () in
@@ -228,7 +235,9 @@ and g' oc = function (* 各命令のアセンブリ生成 (caml2html: emit_gprim
       let ss = stacksize () in
       Printf.fprintf oc "\tsw\t%s, %s, %d ; nontail call directly starts\n" (rename_reg reg_ra) (rename_reg reg_sp) (ss - 4);
       Printf.fprintf oc "\taddi\t%s, %s, %d\n"(rename_reg reg_sp) (rename_reg reg_sp) ss;
-      Printf.fprintf oc "\tjal\t%s, %s\n" (rename_reg reg_ra) (rename_reg x);
+     Printf.fprintf oc "\tli\t%s, %%lo(%s) ;set address for call dir routine\n" (rename_reg reg_cl) (rename_reg x);
+     Printf.fprintf oc "\tjalr\t%s, %s, 0 \n" (rename_reg reg_ra) (rename_reg reg_cl);
+(*      Printf.fprintf oc "\tjal\t%s, %s\n" (rename_reg reg_ra) (rename_reg x);*)
       Printf.fprintf oc "\taddi\t%s, %s, -%d\n" (rename_reg reg_sp) (rename_reg reg_sp) ss;
       Printf.fprintf oc "\tlw\t%s, %s, %d\n" (rename_reg reg_ra) (rename_reg reg_sp) (ss - 4);
 (*      
@@ -310,7 +319,7 @@ let f aaflag oc (Prog(data, fundefs, e)) =
   Printf.fprintf oc "\tli\tx2, 1300000\n";
   Printf.fprintf oc "\tli\tx3, 0x0000000\n";
   (if aaflag = 0 then
-    (Printf.fprintf oc "\tli\tx10, 0xaa\n";
+    (Printf.fprintf oc "\taddi\tx10, x0, 0xaa\n";
      Printf.fprintf oc "\tsw\t%s, %s, %d ; nontail call directly starts\n" (rename_reg reg_ra) (rename_reg reg_sp) 0;
      Printf.fprintf oc "\taddi\t%s, %s, %d\n"(rename_reg reg_sp) (rename_reg reg_sp) 4;
      Printf.fprintf oc "\tjal\t%s, write\n" (rename_reg reg_ra) ;
