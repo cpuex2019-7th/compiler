@@ -1,6 +1,6 @@
 (* give names to intermediate values (K-normalization) *)
 
-type t = (* KÀµµ¬²½¸å¤Î¼° (caml2html: knormal_t) *)
+type t = (* Kæ­£è¦åŒ–å¾Œã®å¼ (caml2html: knormal_t) *)
   | Unit
   | Int of int
   | Float of float
@@ -14,8 +14,8 @@ type t = (* KÀµµ¬²½¸å¤Î¼° (caml2html: knormal_t) *)
   | FSub of Id.t * Id.t
   | FMul of Id.t * Id.t
   | FDiv of Id.t * Id.t
-  | IfEq of Id.t * Id.t * t * t (* Èæ³Ó + Ê¬´ô (caml2html: knormal_branch) *)
-  | IfLE of Id.t * Id.t * t * t (* Èæ³Ó + Ê¬´ô *)
+  | IfEq of Id.t * Id.t * t * t (* æ¯”è¼ƒ + åˆ†å² (caml2html: knormal_branch) *)
+  | IfLE of Id.t * Id.t * t * t (* æ¯”è¼ƒ + åˆ†å² *)
   | Let of (Id.t * Type.t) * t * t
   | Var of Id.t
   | LetRec of fundef * t
@@ -28,7 +28,7 @@ type t = (* KÀµµ¬²½¸å¤Î¼° (caml2html: knormal_t) *)
   | ExtFunApp of Id.t * Id.t list
 and fundef = { name : Id.t * Type.t; args : (Id.t * Type.t) list; body : t }
 
-let rec fv = function (* ¼°¤Ë½Ð¸½¤¹¤ë¡Ê¼«Í³¤Ê¡ËÊÑ¿ô (caml2html: knormal_fv) *)
+let rec fv = function (* å¼ã«å‡ºç¾ã™ã‚‹ï¼ˆè‡ªç”±ãªï¼‰å¤‰æ•° (caml2html: knormal_fv) *)
   | Unit | Int(_) | Float(_) | ExtArray(_) -> S.empty
   | Neg(x) | FNeg(x) -> S.singleton x
   | Add(x, y) | Sub(x, y) | Mul(x, y) | Div(x, y) | FAdd(x, y) | FSub(x, y) | FMul(x, y) | FDiv(x, y) | Get(x, y) -> S.of_list [x; y]
@@ -43,7 +43,7 @@ let rec fv = function (* ¼°¤Ë½Ð¸½¤¹¤ë¡Ê¼«Í³¤Ê¡ËÊÑ¿ô (caml2html: knormal_fv) *)
   | Put(x, y, z) -> S.of_list [x; y; z]
   | LetTuple(xs, y, e) -> S.add y (S.diff (fv e) (S.of_list (List.map fst xs)))
 
-let insert_let (e, t) k = (* let¤òÁÞÆþ¤¹¤ëÊä½õ´Ø¿ô (caml2html: knormal_insert) *)
+let insert_let (e, t) k = (* letã‚’æŒ¿å…¥ã™ã‚‹è£œåŠ©é–¢æ•° (caml2html: knormal_insert) *)
   match e with
   | Var(x) -> k x
   | _ ->
@@ -51,16 +51,16 @@ let insert_let (e, t) k = (* let¤òÁÞÆþ¤¹¤ëÊä½õ´Ø¿ô (caml2html: knormal_insert) *
       let e', t' = k x in
       Let((x, t), e, e'), t'
 
-let rec g env = function (* KÀµµ¬²½¥ë¡¼¥Á¥óËÜÂÎ (caml2html: knormal_g) *)
+let rec g env = function (* Kæ­£è¦åŒ–ãƒ«ãƒ¼ãƒãƒ³æœ¬ä½“ (caml2html: knormal_g) *)
   | Syntax.Unit -> Unit, Type.Unit
-  | Syntax.Bool(b) -> Int(if b then 1 else 0), Type.Int (* ÏÀÍýÃÍtrue, false¤òÀ°¿ô1, 0¤ËÊÑ´¹ (caml2html: knormal_bool) *)
+  | Syntax.Bool(b) -> Int(if b then 1 else 0), Type.Int (* è«–ç†å€¤true, falseã‚’æ•´æ•°1, 0ã«å¤‰æ› (caml2html: knormal_bool) *)
   | Syntax.Int(i) -> Int(i), Type.Int
   | Syntax.Float(d) -> Float(d), Type.Float
   | Syntax.Not(e) -> g env (Syntax.If(e, Syntax.Bool(false), Syntax.Bool(true)))
   | Syntax.Neg(e) ->
       insert_let (g env e)
         (fun x -> Neg(x), Type.Int)
-  | Syntax.Add(e1, e2) -> (* Â­¤·»»¤ÎKÀµµ¬²½ (caml2html: knormal_add) *)
+  | Syntax.Add(e1, e2) -> (* è¶³ã—ç®—ã®Kæ­£è¦åŒ– (caml2html: knormal_add) *)
       insert_let (g env e1)
         (fun x -> insert_let (g env e2)
             (fun y -> Add(x, y), Type.Int))
@@ -97,7 +97,7 @@ let rec g env = function (* KÀµµ¬²½¥ë¡¼¥Á¥óËÜÂÎ (caml2html: knormal_g) *)
             (fun y -> FDiv(x, y), Type.Float))
   | Syntax.Eq _ | Syntax.LE _ as cmp ->
       g env (Syntax.If(cmp, Syntax.Bool(true), Syntax.Bool(false)))
-  | Syntax.If(Syntax.Not(e1), e2, e3) -> g env (Syntax.If(e1, e3, e2)) (* not¤Ë¤è¤ëÊ¬´ô¤òÊÑ´¹ (caml2html: knormal_not) *)
+  | Syntax.If(Syntax.Not(e1), e2, e3) -> g env (Syntax.If(e1, e3, e2)) (* notã«ã‚ˆã‚‹åˆ†å²ã‚’å¤‰æ› (caml2html: knormal_not) *)
   | Syntax.If(Syntax.Eq(e1, e2), e3, e4) ->
       insert_let (g env e1)
         (fun x -> insert_let (g env e2)
@@ -112,13 +112,13 @@ let rec g env = function (* KÀµµ¬²½¥ë¡¼¥Á¥óËÜÂÎ (caml2html: knormal_g) *)
               let e3', t3 = g env e3 in
               let e4', t4 = g env e4 in
               IfLE(x, y, e3', e4'), t3))
-  | Syntax.If(e1, e2, e3) -> g env (Syntax.If(Syntax.Eq(e1, Syntax.Bool(false)), e3, e2)) (* Èæ³Ó¤Î¤Ê¤¤Ê¬´ô¤òÊÑ´¹ (caml2html: knormal_if) *)
+  | Syntax.If(e1, e2, e3) -> g env (Syntax.If(Syntax.Eq(e1, Syntax.Bool(false)), e3, e2)) (* æ¯”è¼ƒã®ãªã„åˆ†å²ã‚’å¤‰æ› (caml2html: knormal_if) *)
   | Syntax.Let((x, t), e1, e2) ->
       let e1', t1 = g env e1 in
       let e2', t2 = g (M.add x t env) e2 in
       Let((x, t), e1', e2'), t2
   | Syntax.Var(x) when M.mem x env -> Var(x), M.find x env
-  | Syntax.Var(x) -> (* ³°ÉôÇÛÎó¤Î»²¾È (caml2html: knormal_extarray) *)
+  | Syntax.Var(x) -> (* å¤–éƒ¨é…åˆ—ã®å‚ç…§ (caml2html: knormal_extarray) *)
       (match M.find x !Typing.extenv with
       | Type.Array(_) as t -> ExtArray x, t
       | _ -> failwith (Printf.sprintf "external variable %s does not have an array type" x))
@@ -127,7 +127,7 @@ let rec g env = function (* KÀµµ¬²½¥ë¡¼¥Á¥óËÜÂÎ (caml2html: knormal_g) *)
       let e2', t2 = g env' e2 in
       let e1', t1 = g (M.add_list yts env') e1 in
       LetRec({ name = (x, t); args = yts; body = e1' }, e2'), t2
-  | Syntax.App(Syntax.Var(f), e2s) when not (M.mem f env) -> (* ³°Éô´Ø¿ô¤Î¸Æ¤Ó½Ð¤· (caml2html: knormal_extfunapp) *)
+  | Syntax.App(Syntax.Var(f), e2s) when not (M.mem f env) -> (* å¤–éƒ¨é–¢æ•°ã®å‘¼ã³å‡ºã— (caml2html: knormal_extfunapp) *)
       (match M.find f !Typing.extenv with
       | Type.Fun(_, t) ->
           let rec bind xs = function (* "xs" are identifiers for the arguments *)
@@ -187,3 +187,48 @@ let rec g env = function (* KÀµµ¬²½¥ë¡¼¥Á¥óËÜÂÎ (caml2html: knormal_g) *)
                 (fun z -> Put(x, y, z), Type.Unit)))
 
 let f e = fst (g M.empty e)
+let print_tab n = (*print space for indent*)
+  for i = 1 to n do
+    Printf.printf " "
+  done
+  
+let print_knormal sentence = (*knormal form ï¿½ï¿½ print*)
+  let rec print_knormal_sub sentence tab = (*recursively called function*)
+    print_tab tab;
+    match sentence with
+    | Unit -> Printf.printf "unit ()\n"
+    | Int i-> Printf.printf "int %d\n" i
+    | Float f -> Printf.printf "float %f\n" f
+    | Neg t -> Printf.printf "neg\n"; print_tab (tab + 1); Id.print_id t; Printf.printf "\n"
+    | Add (t1, t2) -> Printf.printf "add\n"; print_tab (tab + 1); Id.print_id t1; Printf.printf "\n"; print_tab (tab + 1); Id.print_id t2; Printf.printf "\n"
+    | Sub (t1, t2) -> Printf.printf "sub\n"; print_tab (tab + 1); Id.print_id t1; Printf.printf "\n"; print_tab (tab + 1); Id.print_id t2; Printf.printf "\n"
+    | Mul (t1, t2) -> Printf.printf "mul\n"; print_tab (tab + 1); Id.print_id t1; Printf.printf "\n"; print_tab (tab + 1); Id.print_id t2; Printf.printf "\n"
+    | Div (t1, t2) -> Printf.printf "div\n"; print_tab (tab + 1); Id.print_id t1; Printf.printf "\n"; print_tab (tab + 1); Id.print_id t2; Printf.printf "\n"                      
+    | FNeg t -> Printf.printf "fneg\n"; print_tab (tab + 1); Id.print_id t; Printf.printf "\n"
+    | FAdd (t1, t2) -> Printf.printf "fadd\n"; print_tab (tab + 1); Id.print_id t1; Printf.printf "\n"; print_tab (tab + 1); Id.print_id t2; Printf.printf "\n"
+    | FSub (t1, t2) -> Printf.printf "fsub\n"; print_tab (tab + 1); Id.print_id t1; Printf.printf "\n"; print_tab (tab + 1); Id.print_id t2; Printf.printf "\n"
+    | FMul (t1, t2) -> Printf.printf "fmul\n"; print_tab (tab + 1); Id.print_id t1; Printf.printf "\n"; print_tab (tab + 1); Id.print_id t2; Printf.printf "\n"
+    | FDiv (t1, t2) -> Printf.printf "fdiv\n"; print_tab (tab + 1); Id.print_id t1; Printf.printf "\n"; print_tab (tab + 1); Id.print_id t2; Printf.printf "\n"
+    | IfEq (t1, t2, t3, t4) -> Printf.printf "if eq "; Id.print_id t1; Printf.printf " == "; Id.print_id t2; Printf.printf "\n"; print_tab tab; Printf.printf "then\n"; print_knormal_sub t3 (tab + 1); print_tab tab; Printf.printf "else\n"; print_knormal_sub t4 (tab + 1)
+    | IfLE (t1, t2, t3, t4) -> Printf.printf "if le "; Id.print_id t1; Printf.printf " < "; Id.print_id t2; Printf.printf "\n"; print_tab tab; Printf.printf "then\n"; print_knormal_sub t3 (tab + 1); print_tab tab; Printf.printf "else\n"; print_knormal_sub t4 (tab + 1)
+    | Let ((id, ty), t1, t2) -> Printf.printf "let "; Id.print_id id; Printf.printf " "; Type.print_type ty; Printf.printf "\n"; print_knormal_sub t1 (tab + 1); print_tab tab; Printf.printf "in\n"; print_knormal_sub t2 (tab + 1)
+    | Var t -> Printf.printf "var "; Id.print_id t; Printf.printf "\n"
+    | LetRec (fdef, t) -> let (id, tp) = fdef.name in
+                          Printf.printf "let rec "; Id.print_id id; Printf.printf " ("; Type.print_type tp; Printf.printf ") args: ("; print_id_type fdef.args; Printf.printf ")\n"; print_knormal_sub fdef.body (tab + 1); print_tab tab; Printf.printf "in\n"; print_knormal_sub t (tab + 1)
+    | App (t, t_li) -> Printf.printf "app\n"; print_tab (tab + 1); Id.print_id t; Printf.printf "\n"; print_id_list t_li (tab + 1)
+    | Tuple t -> Printf.printf "tuple\n"; print_id_list t (tab + 1)
+    | LetTuple (id_t_li, t1, t2) -> Printf.printf "let tuple "; print_id_type id_t_li; Printf.printf "\n"; print_tab (tab + 1); Id.print_id t1; Printf.printf "\n"; print_tab tab; Printf.printf "in\n"; print_knormal_sub t2 (tab + 1)
+    | Get (t1, t2) -> Printf.printf "from array\n"; print_tab (tab + 1); Id.print_id t1; Printf.printf "\n"; print_tab tab; Printf.printf "get index \n"; print_tab (tab + 1); Id.print_id t2; Printf.printf "\n"
+    | Put (t1, t2, t3) -> Printf.printf "to array \n"; print_tab (tab + 1); Id.print_id t1; Printf.printf "\n"; print_tab tab; Printf.printf "index \n"; print_tab (tab + 1); Id.print_id t2; Printf.printf "\n"; print_tab tab; Printf.printf "put\n"; print_tab (tab + 1); Id.print_id t3; Printf.printf "\n"
+    | ExtArray t -> Printf.printf "ext_array\n"; print_tab (tab + 1); Id.print_id t; Printf.printf "\n"
+    | ExtFunApp (t, t_li) -> Printf.printf "ext_fun_app\n"; print_tab (tab + 1); Id.print_id t; Printf.printf "\n"; print_id_list t_li (tab + 1); Printf.printf "\n"
+  and print_id_type id_type_list = (*print the list of type and id pair*)
+    match id_type_list with
+    | [] -> ()
+    | (id, tp) :: [] -> Printf.printf "id: "; Id.print_id id; Printf.printf " type: "; Type.print_type tp
+    | (id, tp)  :: ts -> Printf.printf "id: "; Id.print_id id; Printf.printf " type: "; Type.print_type tp; Printf.printf " ,"; print_id_type ts
+  and print_id_list t_li tab = (*print the list of id*)
+    match t_li with
+    | [] -> ()
+    | t :: ts -> print_tab tab; Id.print_id t; Printf.printf "\n"; print_id_list ts tab
+  in Printf.printf "knormal form structure\n"; print_knormal_sub sentence 0; sentence (*just print knormal and return same sentence*)            

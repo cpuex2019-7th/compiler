@@ -22,7 +22,7 @@ clean:: nobackup
 SOURCES = float.c type.ml id.ml m.ml s.ml \
 syntax.ml parser.mly lexer.mll typing.mli typing.ml kNormal.mli kNormal.ml \
 alpha.mli alpha.ml beta.mli beta.ml assoc.mli assoc.ml \
-inline.mli inline.ml constFold.mli constFold.ml elim.mli elim.ml \
+inline.mli inline.ml constFold.mli constFold.ml elim.mli elim.ml zero.mli zero.ml \
 closure.mli closure.ml asm.mli asm.ml virtual.mli virtual.ml \
 simm.mli simm.ml regAlloc.mli regAlloc.ml emit.mli emit.ml \
 joinglb.ml joinglb.mli \
@@ -56,7 +56,7 @@ raytrace: data/raytracer/raytrace $(BIN) data/raytracer/raytrace.symbols
 .PRECIOUS: data/raytracer/minrt.s data/raytracer/contest.sld.bin data/raytracer/raytrace data/raytracer/raytrace.symbols
 TRASH = data/raytracer/minrt.s data/raytracer/contest.sld.bin data/raytracer/raytrace data/raytracer/raytrace.symbols
 data/raytracer/minrt.s: $(RESULT) data/raytracer/minrt.ml
-	./$(RESULT) -g -sim data/raytracer/minrt -iter $(ITER) -inline $(INLINE)
+	./$(RESULT) -g  data/raytracer/minrt -iter $(ITER) -inline $(INLINE)
 data/raytracer/sld/contest.sld.bin: $(SLD)
 	cpuex_sld2bin $(SLD) $@
 data/raytracer/raytrace data/raytracer/raytrace.symbols: data/raytracer/minrt.s libmincaml.S 
@@ -89,7 +89,7 @@ riscv_test: $(RISCVTESTSINT:%=riscv-test/%.cmp) #$(RISCVTESTSFLOAT:%=riscv-test/
 TRASH = $(RISCVTESTSINT:%=riscv-test/%.s) $(RISCVTESTSINT:%=riscv-test/%) $(RISCVTESTSINT:%=riscv-test/%.res) $(RISCVTESTSINT:%=riscv-test/%.ans) $(RISCVTESTSINT:%=riscv-test/%.cmp) $(RISCVTESTINT:%=riscv-test/sub/%.ml)#$(RISCVTESTSFLOAT:%=riscv-test/%.s) $(RISCVTESTSFLOAT:%=riscv-test/%) $(RISCVTESTSFLOAT:%=riscv-test/%.res) $(RISCVTESTSFLOAT:%=riscv-test/%.ans) $(RISCVTESTSFLOAT:%=riscv-test/%.cmp)
 
 riscv-test/%.s: $(RESULT) riscv-test/%.ml
-	./$(RESULT) riscv-test/$* -g -sim
+	./$(RESULT) riscv-test/$* -g
 riscv-test/%: riscv-test/%.s libmincaml.S 
 	$(ASM) $@ $^
 #$(RISCVTESTSFLOAT:%=riscv-test/%.res): $(RISCVTESTSFLOAT:%=riscv-test/%)

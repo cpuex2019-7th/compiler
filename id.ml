@@ -1,6 +1,8 @@
 type t = string (* 変数の名前 (caml2html: id_t) *)
 type l = L of string (* トップレベル関数やグローバル配列のラベル (caml2html: id_l) *)
-let zero = "zero"
+let izero = "zero"
+let fzero = "fzero"
+
 let rec pp_list = function
   | [] -> ""
   | [x] -> x
@@ -23,3 +25,6 @@ let rec id_of_typ = function
 let gentmp typ =
   incr counter;
   Printf.sprintf "T%s%d" (id_of_typ typ) !counter
+
+
+let print_id a = Printf.printf "%s" a;;  (*print id*)
