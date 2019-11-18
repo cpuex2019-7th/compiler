@@ -70,16 +70,19 @@ and g' oc = function (* 各命令のアセンブリ生成 (caml2html: emit_gprim
   | NonTail(x), Mov(y) when x = y -> ()
   | NonTail(x), Mov(y) -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tadd\t%s, %s, %s ; mov\n" x (rename_reg reg_z) y
   | NonTail(x), Neg(y) -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tsub\t%s, %s, %s ; neg\n" x (rename_reg reg_z) y
-  | NonTail(x), Add(y, z') -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tadd\t%s, %s, %s ; add\n" x y (pp_id_or_imm z') (*immは来ないはず*)
-  | NonTail(x), Addi(y, z') -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\taddi\t%s, %s, %s ; addi\n" x y (pp_id_or_imm z') 
-  | NonTail(x), Sub(y, z') -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tsub\t%s, %s, %s ; sub\n" x y (pp_id_or_imm z')
+  | NonTail(x), Add(y, z') -> if (z' = V(reg_z) && x = y) || (y = reg_z && (rename_reg x) = pp_id_or_imm z') then () else let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tadd\t%s, %s, %s ; add\n" x y (pp_id_or_imm z') (*immは来ないはず*)
+  | NonTail(x), Addi(y, z') -> if z' = C(0) && x = y then () else let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\taddi\t%s, %s, %s ; addi\n" x y (pp_id_or_imm z') 
+  | NonTail(x), Sub(y, z') -> if (z' = V(reg_z) && x = y) then () else let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tsub\t%s, %s, %s ; sub\n" x y (pp_id_or_imm z')
   | NonTail(x), Mul(y, z') -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tmul\t%s, %s, %s ; mul\n" x y (pp_id_or_imm z')
   | NonTail(x), Div(y, z') -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tdiv\t%s, %s, %s ; div\n" x y (pp_id_or_imm z')        
-  | NonTail(x), SLL(y, z') -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tslli\t%s, %s, %s ; sll\n" x y (pp_id_or_imm z')
-  | NonTail(x), Srai(y, z') -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tsrai\t%s, %s, %s ; sll\n" x y (pp_id_or_imm z') (*z'には数字(2)しかないはず*)
-  | NonTail(x), Ld(y, z') -> (*オフセットの値をどこかのレジスタに入れるようにすれば命令数は減るが、使うレジスタが増える*) let x = rename_reg x in let y = rename_reg y in
+  | NonTail(x), SLL(y, z') -> if (z' = C(0) && x = y) then () else let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tslli\t%s, %s, %s ; sll\n" x y (pp_id_or_imm z')
+  | NonTail(x), Srai(y, z') -> if (z' = C(0) && x = y) then () else let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tsrai\t%s, %s, %s ; sll\n" x y (pp_id_or_imm z') (*z'には数字(2)しかないはず*)
+  | NonTail(x), Ld(y, z') -> (*オフセットの値をどこかのレジスタに入れるようにすれば命令数は減るが、使うレジスタが増える*)
+     let x = rename_reg x in
+     let y = rename_reg y in
      (match z' with
-      | V(_) ->
+      | V(a) when a = reg_z -> Printf.fprintf oc "\tlw\t%s, %s, 0 ; ld\n" x y
+      | V(_) ->         
          if (x = y) then (*もうyの値は使わない*)
            Printf.fprintf oc "\tadd\t%s, %s, %s\n\tlw\t%s, %s, 0 ;ld\n" y y (pp_id_or_imm z') x y
          else if (x = (pp_id_or_imm z')) then (*もうxの値は使わない*)
@@ -90,8 +93,10 @@ and g' oc = function (* 各命令のアセンブリ生成 (caml2html: emit_gprim
          Printf.fprintf oc "\tlw\t%s, %s, %s ; ld\n" x y (pp_id_or_imm z')
      )(*Printf.fprintf oc "\tld\t[%s + %s], %s\n" y (pp_id_or_imm z') x*)
   | NonTail(_), St(x, y, z') ->
-     let x = rename_reg x in let y = rename_reg y in
+     let x = rename_reg x in
+     let y = rename_reg y in
      (match z' with
+      |V(a) when a = reg_z -> Printf.fprintf oc "\tsw\t%s, %s, 0\n" x y
       |V(_) ->
          if (x = y) then (*もうyの値は使わない*)
            Printf.fprintf oc "\tadd\t%s, %s, %s\n\tsw\t%s, %s, 0\n" y y (pp_id_or_imm z') x y
@@ -109,22 +114,26 @@ and g' oc = function (* 各命令のアセンブリ生成 (caml2html: emit_gprim
   | NonTail(x), FNegD(y) -> (*一旦飛ばす*)
      let x = rename_reg x in let y = rename_reg y in
      Printf.fprintf oc "\tfsub\t%s, %s, %s\n" x (rename_reg reg_fz) y
-  | NonTail(x), FAddD(y, z) -> let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in Printf.fprintf oc "\tfadd\t%s, %s, %s ; fadd\n" x y z
-  | NonTail(x), FSubD(y, z) -> let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in Printf.fprintf oc "\tfsub\t%s, %s, %s ; fsub\n" x y z
+  | NonTail(x), FAddD(y, z) -> if (y = reg_fz && x = z) || (z = reg_fz && x = y) then () else let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in Printf.fprintf oc "\tfadd\t%s, %s, %s ; fadd\n" x y z
+  | NonTail(x), FSubD(y, z) -> if (z = reg_fz && x = y) then () else let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in Printf.fprintf oc "\tfsub\t%s, %s, %s ; fsub\n" x y z
   | NonTail(x), FMulD(y, z) -> let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in Printf.fprintf oc "\tfmul\t%s, %s, %s\n" x y z
   | NonTail(x), FDivD(y, z) -> let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in Printf.fprintf oc "\tfdiv\t%s, %s, %s\n" x y z
   | NonTail(x), Feq(y, z) -> let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in Printf.fprintf oc "\tfeq\t%s, %s, %s\n" x y z
   | NonTail(x), Fle(y, z) -> let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in Printf.fprintf oc "\tfle\t%s, %s, %s\n" x y z
   | NonTail(x), LdDF(y, z') ->
-     let x = rename_reg x in let y = rename_reg y in
+     let x = rename_reg x in
+     let y = rename_reg y in
      (match z' with
+      | V(a) when a = reg_z -> Printf.fprintf oc "\tflw\t%s, %s, 0\n" x y
      | V(_) ->
         Printf.fprintf oc "\tadd\t%s, %s, %s\n\tflw\t%s, %s, 0\n\tsub\t%s, %s, %s\n" y y (pp_id_or_imm z') x y y y (pp_id_or_imm z')
      | _ ->
         Printf.fprintf oc "\tflw\t%s, %s, %s\n" x y (pp_id_or_imm z'))
   | NonTail(_), StDF(x, y, z') ->
-     let x = rename_reg x in let y = rename_reg y in
+     let x = rename_reg x in
+     let y = rename_reg y in
      (match z' with
+     | V(a) when a = reg_z -> Printf.fprintf oc "\tfsw\t%s, %s, 0\n" x y
      | V(_) ->
         Printf.fprintf oc "\tadd\t%s, %s, %s\n\tfsw\t%s, %s, 0\n\tsub\t%s, %s, %s\n" y y (pp_id_or_imm z') x y y y (pp_id_or_imm z')
      | _ ->

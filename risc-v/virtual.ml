@@ -41,7 +41,11 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
   | Closure.Int(i) -> Ans(Set(i))
   | Closure.Float(d) -> (*todo: テーブルを使わないでfloatを入れる*)
      let i = Id.genid "i" in
-     let f = Id.L(Int32.to_string(getfl d)) in (*todo: 16進数表記*)
+     let fl = getfl d in
+     if fl = Int32.zero then
+       Ans(FMovD (Id.fzero))
+     else       
+     let f = Id.L(Int32.to_string(fl)) in (*todo: 16進数表記*)
      Let((i, Type.Int), SetLi(f), Ans(Fmv(i)))
 (*      let l =
         try

@@ -83,7 +83,6 @@ let rec g env known = function (* クロージャ変換ルーチン本体 (caml2html: closure
       (* 本当に自由変数がなかったか、変換結果e1'を確認する *)
       (* 注意: e1'にx自身が変数として出現する場合はclosureが必要!
          (thanks to nuevo-namasute and azounoman; test/cls-bug2.ml参照) *)
-      Format.eprintf "ddd\n";
       let zs = S.diff (fv e1') (S.of_list (List.map fst yts)) in      
       let known', e1' =
         if S.is_empty zs then known', e1' else

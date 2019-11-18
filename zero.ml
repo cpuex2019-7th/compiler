@@ -85,4 +85,4 @@ let rec g izeros fzeros = function (* β簡約ルーチン本体 *)
   | ExtArray(x) -> ExtArray(x)
   | ExtFunApp(x, ys) -> ExtFunApp(x, (List.map (fun x -> if find x izeros then Id.izero else if find x fzeros then Id.fzero else x)ys))
 
-let f = Format.eprintf "zero\n"; g [] []
+let f = Format.eprintf "convert zero id@."; g [] []
