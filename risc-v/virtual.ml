@@ -137,9 +137,17 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
       (match (try (M.find x env) with Not_found -> Id.print_id x; assert false ) with
       | Type.Array(Type.Unit) -> Ans(Nop)
       | Type.Array(Type.Float) ->
+         if y = Id.izero
+         then
+           Ans(LdDF(x, V(Id.izero)))
+         else           
           Let((offset, Type.Int), SLL(y, C(2)), (*ここC(2)とかじゃなくて大丈夫か*)
               Ans(LdDF(x, V(offset))))
       | Type.Array(_) ->
+         if y = Id.izero
+         then
+           Ans(Ld(x, V(Id.izero)))
+         else           
           Let((offset, Type.Int), SLL(y, C(2)),
               Ans(Ld(x, V(offset))))
       | _ -> assert false)
@@ -148,13 +156,22 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
       (match (try (M.find x env) with Not_found -> Id.print_id x; assert false) with
       | Type.Array(Type.Unit) -> Ans(Nop)
       | Type.Array(Type.Float) ->
+         if y = Id.izero
+         then
+           Ans(StDF(z, x, V(Id.izero)))
+         else           
           Let((offset, Type.Int), SLL(y, C(2)), (*ここも大丈夫か*)
               Ans(StDF(z, x, V(offset))))
       | Type.Array(_) ->
+         if y = Id.izero
+         then
+           Ans(St(z, x, V(Id.izero)))
+         else           
           Let((offset, Type.Int), SLL(y, C(2)),
               Ans(St(z, x, V(offset))))
       | _ -> assert false)
   | Closure.ExtArray(Id.L(x)) -> Ans(SetL(Id.L("min_caml_" ^ x)))
+
 
 (* 関数の仮想マシンコード生成 (caml2html: virtual_h) *)
 let h { Closure.name = (Id.L(x), t); Closure.args = yts; Closure.formal_fv = zts; Closure.body = e } =

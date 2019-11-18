@@ -212,7 +212,6 @@ and g' oc = function (* 各命令のアセンブリ生成 (caml2html: emit_gprim
      g'_args oc [] ys zs;
 (*     Printf.fprintf oc "\tli\t%s, %%lo(%s) ;set address for call dir routine\n" (rename_reg reg_cl) (rename_reg x);
      Printf.fprintf oc "\tjalr\t%s, %s, 0 ; tail call dir routine\n" (rename_reg reg_z) (rename_reg reg_cl)*)
-     (*labelが近ければこれでやりたい*)
      Printf.fprintf oc "\tjal\t%s, %s ; tail call directly routine\n" (rename_reg reg_z) (rename_reg x)
   | NonTail(a), CallCls(x, ys, zs) -> (*closureを用いた関数呼び出し*)
       g'_args oc [(x, reg_cl)] ys zs;
