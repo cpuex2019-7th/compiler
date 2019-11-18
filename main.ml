@@ -2,48 +2,48 @@ let limit = ref 1000
 let gflag = ref 0
 let aaflag = ref 0          
 
-let rec iter n e = (* ºÇÅ¬²½½èÍý¤ò¤¯¤ê¤«¤¨¤¹ (caml2html: main_iter) *)
+let rec iter n e = (* æœ€é©åŒ–å‡¦ç†ã‚’ãã‚Šã‹ãˆã™ (caml2html: main_iter) *)
   Format.eprintf "iteration %d@." n;
-  if n = 0 then e else
+  if n = 0 then Beta.f (Zero.f e) else
     let e' = Elim.f (*eliminate unecessary definition*)
                (ConstFold.f (*constant folding*)
                   (Inline.f (*inline expansion*)
                      (Assoc.f (*let reduction*)
                         (Beta.f e)))) in (*beta reduction*)
-  if e = e' then e else
+    if e = e' then Beta.f (Zero.f e) else
   iter (n - 1) e'
 
-let lexbuf outchan l glb_l= (* ¥Ð¥Ã¥Õ¥¡¤ò¥³¥ó¥Ñ¥¤¥ë¤·¤Æ¥Á¥ã¥ó¥Í¥ë¤Ø½ÐÎÏ¤¹¤ë (caml2html: main_lexbuf) *)
-  (*todo gflag¤Ë¤è¤Ã¤Æ¾ì¹çÊ¬¤±*)
+let lexbuf outchan l glb_l= (* ãƒãƒƒãƒ•ã‚¡ã‚’ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã—ã¦ãƒãƒ£ãƒ³ãƒãƒ«ã¸å‡ºåŠ›ã™ã‚‹ (caml2html: main_lexbuf) *)
+  (*todo gflagã«ã‚ˆã£ã¦å ´åˆåˆ†ã‘*)
   Id.counter := 0;
   Typing.extenv := M.empty;
   if (!gflag = 0) then
   Emit.f !aaflag outchan (*generate assembly code*)
     (RegAlloc.f (*register allocation*)
-       (Simm.f (*Â¨ÃÍºÇÅ¬²½*)
+       (Simm.f (*å³å€¤æœ€é©åŒ–*)
           (Virtual.f (*generate vurtual machine code*)
              (Closure.f (*convert function to closure to elmininate nested function*)
-                (iter !limit (*ºÇÅ¬²½*)
+                (iter !limit (*æœ€é©åŒ–*)
                    (Alpha.f (*alpha renaming*)
-                      (KNormal.f (*KÀµµ¬²½*)
+                      (KNormal.f (*Kæ­£è¦åŒ–*)
                          (Typing.f (*type check *)
                             (Parser.exp Lexer.token l))))))))) (*parse the buffer*)
   else
     Emit.f !aaflag outchan (*generate assembly code*)
     (RegAlloc.f (*register allocation*)
-       (Simm.f (*Â¨ÃÍºÇÅ¬²½*)
+       (Simm.f (*å³å€¤æœ€é©åŒ–*)
           (Virtual.f (*generate vurtual machine code*)
              (Closure.f (*convert function to closure to elmininate nested function*)
-                (iter !limit (*ºÇÅ¬²½*)
+                (iter !limit (*æœ€é©åŒ–*)
                    (Alpha.f (*alpha renaming*)
-                      (KNormal.f (*KÀµµ¬²½*)
+                      (KNormal.f (*Kæ­£è¦åŒ–*)
                          (Typing.f (*type check *)
                             (Joinglb.f
                             (Parser.exp Lexer.token l) (Parser.exp Lexer.token glb_l)))))))))) (*parse the buffer*)
 
-let string s glbchan = lexbuf stdout (Lexing.from_string s) (Lexing.from_string glbchan) (* Ê¸»úÎó¤ò¥³¥ó¥Ñ¥¤¥ë¤·¤ÆÉ¸½à½ÐÎÏ¤ËÉ½¼¨¤¹¤ë (caml2html: main_string) *)
+let string s glbchan = lexbuf stdout (Lexing.from_string s) (Lexing.from_string glbchan) (* æ–‡å­—åˆ—ã‚’ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã—ã¦æ¨™æº–å‡ºåŠ›ã«è¡¨ç¤ºã™ã‚‹ (caml2html: main_string) *)
 
-let file f = (* ¥Õ¥¡¥¤¥ë¤ò¥³¥ó¥Ñ¥¤¥ë¤·¤Æ¥Õ¥¡¥¤¥ë¤Ë½ÐÎÏ¤¹¤ë (caml2html: main_file) *)
+let file f = (* ãƒ•ã‚¡ã‚¤ãƒ«ã‚’ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã—ã¦ãƒ•ã‚¡ã‚¤ãƒ«ã«å‡ºåŠ›ã™ã‚‹ (caml2html: main_file) *)
   let glbchan = open_in ("globals.ml") in
   let inchan = open_in (f ^ ".ml") in (*file name of ml program*)
   let outchan = open_out (f ^ ".s") in (* file name of assembly program*)
@@ -54,12 +54,12 @@ let file f = (* ¥Õ¥¡¥¤¥ë¤ò¥³¥ó¥Ñ¥¤¥ë¤·¤Æ¥Õ¥¡¥¤¥ë¤Ë½ÐÎÏ¤¹¤ë (caml2html: main_file
     close_out outchan;
   with e -> (close_in inchan; close_out outchan; raise e)
 
-let () = (* ¤³¤³¤«¤é¥³¥ó¥Ñ¥¤¥é¤Î¼Â¹Ô¤¬³«»Ï¤µ¤ì¤ë (caml2html: main_entry) *)
+let () = (* ã“ã“ã‹ã‚‰ã‚³ãƒ³ãƒ‘ã‚¤ãƒ©ã®å®Ÿè¡ŒãŒé–‹å§‹ã•ã‚Œã‚‹ (caml2html: main_entry) *)
   let files = ref [] in
   Arg.parse
     [("-inline", Arg.Int(fun i -> Inline.threshold := i), "maximum size of functions inlined");
      ("-iter", Arg.Int(fun i -> limit := i), "maximum number of optimizations iterated");
-     ("-g", Arg.Unit(fun _ -> gflag := 1), "include or not globals.ml");(*Unit¤Ã¤Æ²ø¤·¤¤¤±¤É-g¤ò¤Ä¤±¤¿¤È¤­,globals.ml¤òinclude¤·¤Æmin-rt¤ò¥³¥ó¥Ñ¥¤¥ë¤Ç¤­¤ë¤è¤¦¤Ë¤Ê¤ë*)
+     ("-g", Arg.Unit(fun _ -> gflag := 1), "include or not globals.ml");(*Unitã£ã¦æ€ªã—ã„ã‘ã©-gã‚’ã¤ã‘ãŸã¨ã,globals.mlã‚’includeã—ã¦min-rtã‚’ã‚³ãƒ³ãƒ‘ã‚¤ãƒ«ã§ãã‚‹ã‚ˆã†ã«ãªã‚‹*)
     ("-sim", Arg.Unit(fun _ -> aaflag := 1), "do not write 0xaa first")]
     (fun s -> files := !files @ [s])
     ("Mitou Min-Caml Compiler (C) Eijiro Sumii\n" ^

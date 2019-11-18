@@ -1,9 +1,9 @@
 (*即値最適化*)
 open Asm
 
-let rec g env = function (* 命令列の13bit即値最適化 (caml2html: simm13_g) *)
+let rec g env = function (* 命令列の12bit即値最適化 (caml2html: simm13_g) *)
   | Ans(exp) -> Ans(g' env exp)
-  | Let((x, t), Set(i), e) when -4096 <= i && i < 4096 -> (*todo: 即値は何bitか addiに入るかどうかをここで判定する*)
+  | Let((x, t), Set(i), e) when -2048 <= i && i < 2048 -> (*todo: 即値は何bitか addiに入るかどうかをここで判定する*)
       (* Format.eprintf "found simm13 %s = %d@." x i; *)
       let e' = g (M.add x i env) e in
       if List.mem x (fv e') then Let((x, t), Set(i), e') else
@@ -21,6 +21,9 @@ and g' env = function (* 各命令の13bit即値最適化 (caml2html: simm13_gpr
                                      if v = 2 then Srai(x, C(1))
                                      else if v = 10 then CallDir(Id.L("min_caml_div10"), [x], [])
                                      else failwith "div instruction is not allowed other than 2, 10"
+  | Mul(x, V(y)) when M.mem y env -> let v = M.find y env in
+                                     if v = 4 then SLL(x, C(2))
+                                     else Mul(x, V(y))
   | Div(x, _) -> failwith "div instruction is not allowed"
   | SLL(x, V(y)) when M.mem y env -> SLL(x, C(M.find y env))
   | Ld(x, V(y)) when M.mem y env -> Ld(x, C(M.find y env))
