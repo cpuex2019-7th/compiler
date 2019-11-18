@@ -106,5 +106,5 @@ let rec g env known = function (* クロージャ変換ルーチン本体 (caml2html: closure
 
 let f e =
   toplevel := [];
-  let e' = g M.empty S.empty e in
+  let e' = g (M.add Id.izero Type.Int (M.add Id.fzero Type.Float M.empty)) (S.add Id.izero (S.add Id.fzero S.empty)) e in
   Prog(List.rev !toplevel, e')

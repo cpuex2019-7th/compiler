@@ -4,13 +4,13 @@ let aaflag = ref 0
 
 let rec iter n e = (* 最適化処理をくりかえす (caml2html: main_iter) *)
   Format.eprintf "iteration %d@." n;
-  if n = 0 then e else
+  if n = 0 then Zero.f e else
     let e' = Elim.f (*eliminate unecessary definition*)
                (ConstFold.f (*constant folding*)
                   (Inline.f (*inline expansion*)
                      (Assoc.f (*let reduction*)
                         (Beta.f e)))) in (*beta reduction*)
-  if e = e' then e else
+  if e = e' then Zero.f e else
   iter (n - 1) e'
 
 let lexbuf outchan l glb_l= (* バッファをコンパイルしてチャンネルへ出力する (caml2html: main_lexbuf) *)
