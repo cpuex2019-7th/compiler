@@ -89,7 +89,7 @@ riscv_test: $(RISCVTESTSINT:%=riscv-test/%.cmp) #$(RISCVTESTSFLOAT:%=riscv-test/
 TRASH = $(RISCVTESTSINT:%=riscv-test/%.s) $(RISCVTESTSINT:%=riscv-test/%) $(RISCVTESTSINT:%=riscv-test/%.res) $(RISCVTESTSINT:%=riscv-test/%.ans) $(RISCVTESTSINT:%=riscv-test/%.cmp) $(RISCVTESTINT:%=riscv-test/sub/%.ml)#$(RISCVTESTSFLOAT:%=riscv-test/%.s) $(RISCVTESTSFLOAT:%=riscv-test/%) $(RISCVTESTSFLOAT:%=riscv-test/%.res) $(RISCVTESTSFLOAT:%=riscv-test/%.ans) $(RISCVTESTSFLOAT:%=riscv-test/%.cmp)
 
 riscv-test/%.s: $(RESULT) riscv-test/%.ml
-	./$(RESULT) riscv-test/$* -g 
+	./$(RESULT) riscv-test/$* -g
 riscv-test/%: riscv-test/%.s libmincaml.S 
 	$(ASM) $@ $^
 #$(RISCVTESTSFLOAT:%=riscv-test/%.res): $(RISCVTESTSFLOAT:%=riscv-test/%)

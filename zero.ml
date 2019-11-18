@@ -60,7 +60,7 @@ let rec g izeros fzeros = function (* β簡約ルーチン本体 *)
        g izeros (x :: fzeros) e2
      else if e1' = Var(Id.fzero) then
        g izeros (x :: fzeros) e2
-     else Let((x, t), e1, g izeros fzeros e2)
+     else Let((x, t), e1', g izeros fzeros e2)
   | LetRec({ name = xt; args = yts; body = e1 }, e2) ->
       LetRec({ name = xt; args = yts; body = g izeros fzeros e1 }, g izeros fzeros e2)
   | Var(x) ->

@@ -31,19 +31,27 @@ type fundef = { name : Id.l * Type.t;
                 body : t }
 type prog = Prog of fundef list * t
 
-let rec fv = function
+let rec remove_and_uniq xs = function
+  | [] -> []
+  | x :: ys when S.mem x xs -> remove_and_uniq xs ys
+  | x :: ys -> x :: remove_and_uniq (S.add x xs) ys
+             
+let rec fv_sub = function
   | Unit | Int(_) | Float(_) | ExtArray(_) -> S.empty
   | Neg(x) | FNeg(x) -> S.singleton x
   | Add(x, y) | Sub(x, y) | Mul(x, y) | Div(x, y) | FAdd(x, y) | FSub(x, y) | FMul(x, y) | FDiv(x, y) | Get(x, y) -> S.of_list [x; y]
-  | IfEq(x, y, e1, e2)| IfLE(x, y, e1, e2) -> S.add x (S.add y (S.union (fv e1) (fv e2)))
-  | Let((x, t), e1, e2) -> S.union (fv e1) (S.remove x (fv e2))
+  | IfEq(x, y, e1, e2)| IfLE(x, y, e1, e2) -> S.add x (S.add y (S.union (fv_sub e1) (fv_sub e2)))
+  | Let((x, t), e1, e2) -> S.union (fv_sub e1) (S.remove x (fv_sub e2))
   | Var(x) -> S.singleton x
-  | MakeCls((x, t), { entry = l; actual_fv = ys }, e) -> S.remove x (S.union (S.of_list ys) (fv e))
+  | MakeCls((x, t), { entry = l; actual_fv = ys }, e) -> S.remove x (S.union (S.of_list ys) (fv_sub e))
   | AppCls(x, ys) -> S.of_list (x :: ys)
   | AppDir(_, xs) | Tuple(xs) -> S.of_list xs
-  | LetTuple(xts, y, e) -> S.add y (S.diff (fv e) (S.of_list (List.map fst xts)))
+  | LetTuple(xts, y, e) -> S.add y (S.diff (fv_sub e) (S.of_list (List.map fst xts)))
   | Put(x, y, z) -> S.of_list [x; y; z]
-
+let rec fv exp =
+  let a = fv_sub exp in
+  S.remove Id.izero (S.remove Id.fzero a)
+                  
 let toplevel : fundef list ref = ref []
 
 let rec g env known = function (* クロージャ変換ルーチン本体 (caml2html: closure_g) *)
@@ -75,14 +83,15 @@ let rec g env known = function (* クロージャ変換ルーチン本体 (caml2html: closure
       (* 本当に自由変数がなかったか、変換結果e1'を確認する *)
       (* 注意: e1'にx自身が変数として出現する場合はclosureが必要!
          (thanks to nuevo-namasute and azounoman; test/cls-bug2.ml参照) *)
-      let zs = S.diff (fv e1') (S.of_list (List.map fst yts)) in
+      Format.eprintf "ddd\n";
+      let zs = S.diff (fv e1') (S.of_list (List.map fst yts)) in      
       let known', e1' =
         if S.is_empty zs then known', e1' else
         (* 駄目だったら状態(toplevelの値)を戻して、クロージャ変換をやり直す *)
         (Format.eprintf "free variable(s) %s found in function %s@." (Id.pp_list (S.elements zs)) x;
          Format.eprintf "function %s cannot be directly applied in fact@." x;
          toplevel := toplevel_backup;
-         let e1' = g (M.add_list yts env') known e1 in
+         let e1' = g (M.add_list yts env') known e1 in         
          known, e1') in
       let zs = S.elements (S.diff (fv e1') (S.add x (S.of_list (List.map fst yts)))) in (* 自由変数のリスト *)
       let zts = List.map (fun z -> (z, M.find z env')) zs in (* ここで自由変数zの型を引くために引数envが必要 *)
@@ -94,7 +103,6 @@ let rec g env known = function (* クロージャ変換ルーチン本体 (caml2html: closure
         (Format.eprintf "eliminating closure(s) %s@." x;
          e2') (* 出現しなければMakeClsを削除 *)
   | KNormal.App(x, ys) when S.mem x known -> (* 関数適用の場合 (caml2html: closure_app) *)
-      Format.eprintf "directly applying %s@." x;
       AppDir(Id.L(x), ys)
   | KNormal.App(f, xs) -> AppCls(f, xs)
   | KNormal.Tuple(xs) -> Tuple(xs)
@@ -102,9 +110,9 @@ let rec g env known = function (* クロージャ変換ルーチン本体 (caml2html: closure
   | KNormal.Get(x, y) -> Get(x, y)
   | KNormal.Put(x, y, z) -> Put(x, y, z)
   | KNormal.ExtArray(x) -> ExtArray(Id.L(x))
-  | KNormal.ExtFunApp(x, ys) -> AppDir(Id.L("min_caml_" ^ x), ys)
+  | KNormal.ExtFunApp(x, ys) -> AppDir(Id.L("min_caml_" ^ x), ys) 
 
 let f e =
   toplevel := [];
-  let e' = g (M.add Id.izero Type.Int (M.add Id.fzero Type.Float M.empty)) (S.add Id.izero (S.add Id.fzero S.empty)) e in
+  let e' = g  M.empty S.empty e  in(*g (M.add Id.izero Type.Int (M.add Id.fzero Type.Float M.empty)) S.empty e in*)
   Prog(List.rev !toplevel, e')

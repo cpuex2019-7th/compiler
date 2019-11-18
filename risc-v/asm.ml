@@ -112,7 +112,7 @@ and fv = function
   | Ans(exp) -> fv_exp exp
   | Let((x, t), exp, e) ->
       fv_exp exp @ remove_and_uniq (S.singleton x) (fv e)
-let fv e = remove_and_uniq (S.add Id.fzero( S.add Id.izero S.empty)) (fv e)
+let fv e = let a = remove_and_uniq (S.add Id.fzero( S.add Id.izero S.empty)) (fv e) in if List.mem Id.izero a || List.mem Id.fzero a then assert false else a
 
 let rec concat e1 xt e2 =
   match e1 with

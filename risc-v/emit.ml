@@ -23,7 +23,10 @@ let locate x =
     | y :: zs when x = y -> 0 :: List.map succ (loc zs)
     | y :: zs -> List.map succ (loc zs) in
   loc !stackmap
-let offset x = 4 * List.hd (locate x)
+let offset x =
+  match locate x with
+  | [] -> Id.print_id x; assert false
+  | _ ->    4 * List.hd (locate x)
 let stacksize () = align ((List.length !stackmap + 1) * 4)
 
 let pp_id_or_imm = function
@@ -207,10 +210,10 @@ and g' oc = function (* 各命令のアセンブリ生成 (caml2html: emit_gprim
      Printf.fprintf oc "\tjalr\t%s, %s, 0 ; tail call closure routine\n" (rename_reg reg_z) (rename_reg reg_sw)
   | Tail, CallDir(Id.L(x), ys, zs) -> (* 末尾呼び出し *)
      g'_args oc [] ys zs;
-     Printf.fprintf oc "\tli\t%s, %%lo(%s) ;set address for call dir routine\n" (rename_reg reg_cl) (rename_reg x);
-     Printf.fprintf oc "\tjalr\t%s, %s, 0 ; tail call dir routine\n" (rename_reg reg_z) (rename_reg reg_cl)
-       (*labelが近ければこれでやりたい
-     Printf.fprintf oc "\tjal\t%s, %s ; tail call directly routine\n" (rename_reg reg_z) (rename_reg x)*)
+(*     Printf.fprintf oc "\tli\t%s, %%lo(%s) ;set address for call dir routine\n" (rename_reg reg_cl) (rename_reg x);
+     Printf.fprintf oc "\tjalr\t%s, %s, 0 ; tail call dir routine\n" (rename_reg reg_z) (rename_reg reg_cl)*)
+     (*labelが近ければこれでやりたい*)
+     Printf.fprintf oc "\tjal\t%s, %s ; tail call directly routine\n" (rename_reg reg_z) (rename_reg x)
   | NonTail(a), CallCls(x, ys, zs) -> (*closureを用いた関数呼び出し*)
       g'_args oc [(x, reg_cl)] ys zs;
       let ss = stacksize () in
@@ -235,9 +238,9 @@ and g' oc = function (* 各命令のアセンブリ生成 (caml2html: emit_gprim
       let ss = stacksize () in
       Printf.fprintf oc "\tsw\t%s, %s, %d ; nontail call directly starts\n" (rename_reg reg_ra) (rename_reg reg_sp) (ss - 4);
       Printf.fprintf oc "\taddi\t%s, %s, %d\n"(rename_reg reg_sp) (rename_reg reg_sp) ss;
-     Printf.fprintf oc "\tli\t%s, %%lo(%s) ;set address for call dir routine\n" (rename_reg reg_cl) (rename_reg x);
-     Printf.fprintf oc "\tjalr\t%s, %s, 0 \n" (rename_reg reg_ra) (rename_reg reg_cl);
-(*      Printf.fprintf oc "\tjal\t%s, %s\n" (rename_reg reg_ra) (rename_reg x);*)
+(*     Printf.fprintf oc "\tli\t%s, %%lo(%s) ;set address for call dir routine\n" (rename_reg reg_cl) (rename_reg x);
+     Printf.fprintf oc "\tjalr\t%s, %s, 0 \n" (rename_reg reg_ra) (rename_reg reg_cl);*)
+      Printf.fprintf oc "\tjal\t%s, %s\n" (rename_reg reg_ra) (rename_reg x);
       Printf.fprintf oc "\taddi\t%s, %s, -%d\n" (rename_reg reg_sp) (rename_reg reg_sp) ss;
       Printf.fprintf oc "\tlw\t%s, %s, %d\n" (rename_reg reg_ra) (rename_reg reg_sp) (ss - 4);
 (*      
