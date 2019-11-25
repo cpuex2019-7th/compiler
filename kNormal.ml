@@ -21,6 +21,7 @@ type t = (* K正規化後の式 (caml2html: knormal_t) *)
   | LetRec of fundef * t
   | App of Id.t * Id.t list
   | Tuple of Id.t list
+  | STuple of Id.t list
   | LetTuple of (Id.t * Type.t) list * Id.t * t
   | Get of Id.t * Id.t
   | Put of Id.t * Id.t * Id.t
@@ -39,7 +40,7 @@ let rec fv = function (* 式に出現する（自由な）変数 (caml2html: kno
       let zs = S.diff (fv e1) (S.of_list (List.map fst yts)) in
       S.diff (S.union zs (fv e2)) (S.singleton x)
   | App(x, ys) -> S.of_list (x :: ys)
-  | Tuple(xs) | ExtFunApp(_, xs) -> S.of_list xs
+  | Tuple(xs) |STuple(xs)| ExtFunApp(_, xs) -> S.of_list xs
   | Put(x, y, z) -> S.of_list [x; y; z]
   | LetTuple(xs, y, e) -> S.add y (S.diff (fv e) (S.of_list (List.map fst xs)))
 
@@ -217,6 +218,7 @@ let print_knormal sentence = (*knormal form �� print*)
                           Printf.printf "let rec "; Id.print_id id; Printf.printf " ("; Type.print_type tp; Printf.printf ") args: ("; print_id_type fdef.args; Printf.printf ")\n"; print_knormal_sub fdef.body (tab + 1); print_tab tab; Printf.printf "in\n"; print_knormal_sub t (tab + 1)
     | App (t, t_li) -> Printf.printf "app\n"; print_tab (tab + 1); Id.print_id t; Printf.printf "\n"; print_id_list t_li (tab + 1)
     | Tuple t -> Printf.printf "tuple\n"; print_id_list t (tab + 1)
+    | STuple t -> Printf.printf "Stuple\n"; print_id_list t (tab + 1)                 
     | LetTuple (id_t_li, t1, t2) -> Printf.printf "let tuple "; print_id_type id_t_li; Printf.printf "\n"; print_tab (tab + 1); Id.print_id t1; Printf.printf "\n"; print_tab tab; Printf.printf "in\n"; print_knormal_sub t2 (tab + 1)
     | Get (t1, t2) -> Printf.printf "from array\n"; print_tab (tab + 1); Id.print_id t1; Printf.printf "\n"; print_tab tab; Printf.printf "get index \n"; print_tab (tab + 1); Id.print_id t2; Printf.printf "\n"
     | Put (t1, t2, t3) -> Printf.printf "to array \n"; print_tab (tab + 1); Id.print_id t1; Printf.printf "\n"; print_tab tab; Printf.printf "index \n"; print_tab (tab + 1); Id.print_id t2; Printf.printf "\n"; print_tab tab; Printf.printf "put\n"; print_tab (tab + 1); Id.print_id t3; Printf.printf "\n"
