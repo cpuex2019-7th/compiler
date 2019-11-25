@@ -34,6 +34,7 @@ let rec g env = function (* α変換ルーチン本体 (caml2html: alpha_g) *)
              g env e2)
   | App(x, ys) -> App(find x env, List.map (fun y -> find y env) ys)
   | Tuple(xs) -> Tuple(List.map (fun x -> find x env) xs)
+  | STuple(xs) -> STuple(List.map (fun x -> find x env) xs)               
   | LetTuple(xts, y, e) -> (* LetTupleのα変換 (caml2html: alpha_lettuple) *)
       let xs = List.map fst xts in
       let env' = M.add_list2 xs (List.map Id.genid xs) env in
@@ -44,5 +45,6 @@ let rec g env = function (* α変換ルーチン本体 (caml2html: alpha_g) *)
   | Put(x, y, z) -> Put(find x env, find y env, find z env)
   | ExtArray(x) -> ExtArray(x)
   | ExtFunApp(x, ys) -> ExtFunApp(x, List.map (fun y -> find y env) ys)
+
 
 let f = g M.empty
