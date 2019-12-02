@@ -91,5 +91,39 @@ let rec g izeros fzeros = function (* β簡約ルーチン本体 *)
   | App(g, xs) -> App(g, (List.map (fun x -> if find x izeros then Id.izero else if find x fzeros then Id.fzero else x) xs))
   | ExtArray(x) -> ExtArray(x)
   | ExtFunApp(x, ys) -> ExtFunApp(x, (List.map (fun x -> if find x izeros then Id.izero else if find x fzeros then Id.fzero else x)ys))
+  | Print(x) ->
+     if find x izeros then Print(Id.izero)
+     else Print(x)
+  | Array(x, y) ->
+     if find x izeros then
+       if find y izeros then Array(Id.izero, Id.izero)
+       else Array(Id.izero, y)
+     else  if find y izeros then Array(x, Id.izero)
+     else Array(x, y)
+  | Farray(x, y) -> 
+     if find x izeros then
+       if find y fzeros then Farray(Id.izero, Id.fzero)
+       else Farray(Id.izero, y)
+     else  if find y fzeros then Farray(x, Id.fzero)
+     else Farray(x, y)
+  | Fabs(x) ->(*constfoldで畳み込まれるからここには来ない*)
+     if find x fzeros then
+       Fabs(Id.fzero)
+     else Fabs(x)
+  | Fsqrt(x) ->(*constfoldで畳み込まれるからここには来ない*)
+     if find x fzeros then
+       Fsqrt(Id.fzero)
+     else Fsqrt(x)
+  | Fcvtsw(x) ->
+     if find x izeros then
+       Fcvtsw(Id.izero)
+     else Fcvtsw(x)
+  | Fcvtws(x) ->
+     if find x fzeros then
+       Fcvtws(Id.fzero)
+     else Fcvtws(x)
+  | Read -> Read
+  | Fread -> Fread
+     
 
 let f =  Format.eprintf "zero elim@.";g [] []

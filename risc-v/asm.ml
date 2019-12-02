@@ -45,6 +45,15 @@ and exp = (* 一つ一つの命令に対応する式 (caml2html: sparcasm_exp) *
   | CallDir of Id.l * Id.t list * Id.t list
   | Save of Id.t * Id.t (* レジスタ変数の値をスタック変数へ保存 (caml2html: sparcasm_save) *)
   | Restore of Id.t (* スタック変数から値を復元 (caml2html: sparcasm_restore) *)
+  | Hpsave
+  | Array of Id.t * Id.t * Id.t * Id.t
+  | Farray of Id.t * Id.t * Id.t * Id.t
+  | Write of Id.t * Id.t * Id.t * Id.t
+  | Read of Id.t * Id.t * Id.t * Id.t * Id.t
+  | Fabs of Id.t
+  | Fsqrt of Id.t
+  | Fcvtsw of Id.t
+  | Fcvtws of Id.t             
 type fundef = { name : Id.l; args : Id.t list; fargs : Id.t list; body : t; ret : Type.t }
 (* プログラム全体 = 浮動小数点数テーブル + トップレベル関数 + メインの式 (caml2html: sparcasm_prog) *)
 type prog = Prog of (Id.l * float) list * fundef list * t
@@ -99,8 +108,8 @@ let rec remove_and_uniq xs = function
 let fv_id_or_imm = function V(x) -> [x] | _ -> []
 let is_id_zero x = if x = Id.izero || x = Id.fzero then true else false
 let rec fv_exp = function
-  | Nop | Set(_) | SetL(_) | SetLi(_) | Comment(_) | Restore(_) -> []
-  | Fmv(x) | Mov(x) | Neg(x) | FMovD(x) | FNegD(x) | Save(x, _) -> [x]
+  | Nop | Set(_) | SetL(_) | SetLi(_) | Comment(_) | Restore(_) | Hpsave -> []
+  | Fmv(x) | Mov(x) | Neg(x) | FMovD(x) | FNegD(x) | Save(x, _)  | Fabs(x) | Fsqrt(x) | Fcvtsw(x) | Fcvtws(x)-> [x]
   | Add(x, y') | Addi(x, y') | Sub(x, y') | Mul(x, y') | Div(x, y') |  SLL(x, y') | Srai (x, y')  |Ld(x, y') | LdDF(x, y') -> x :: fv_id_or_imm y'
   | St(x, y, z') | StDF(x, y, z') -> x :: y :: fv_id_or_imm z'
   | FAddD(x, y) | FSubD(x, y) | FMulD(x, y) | FDivD(x, y) | Feq(x, y) | Fle(x, y) -> [x; y]
@@ -108,6 +117,8 @@ let rec fv_exp = function
   (*  | IfFEq(x, y, e1, e2) | IfFLE(x, y, e1, e2) -> x :: y :: remove_and_uniq S.empty (fv e1 @ fv e2) (* uniq here just for efficiency *) *)
   | CallCls(x, ys, zs) -> x :: ys @ zs
   | CallDir(_, ys, zs) -> ys @ zs
+  | Array(x, y, z, a) | Farray(x, y, z, a)  | Write(x, y, z, a) -> [x;y;z;a]
+  | Read(x, y, z, a, b) -> [x;y;z;a;b]
 and fv = function
   | Ans(exp) -> fv_exp exp
   | Let((x, t), exp, e) ->

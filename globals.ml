@@ -104,7 +104,19 @@ let rec fisneg x = x < 0.0 in
 let rec fiszero x = (x = 0.0) in
 let rec fneg x = 0.0 -. x in
 let rec fless x y = x < y in
-(*以下コピペ: https://github.com/cpuex2016D/min-caml/blob/dev/2nd/mylib.ml*)
+let rec print_newline x = print_char 10 in
+let rec floor x =
+  if x > 0.0 then
+    let b = x -. 0.5 in
+    fcvtsw (fcvtws b)
+  else
+    let y = fcvtsw (fcvtws (x +. 0.5)) in
+    if y = x then x else y -. 1.0 in 
+let rec int_of_float x =
+  fcvtws x in
+let rec float_of_int x =
+  fcvtsw x in
+(*以下を改変: https://github.com/cpuex2016D/min-caml/blob/dev/2nd/mylib.ml*)
 
 let rec fhalf x = x *. 0.5 in
 let rec fsqr x = x *. x in
@@ -118,66 +130,104 @@ let rec taylor_sin x =
 in
 (* 0付近の値のみ使うように最適化して、打ち切り誤差を減らす *)
 let rec cos x =
-	if x >= 0.0 then
-		if x >  6.28318548202514 then
-			cos (x -.  6.28318548202514)
-		else
-			if x < 3.1415927410 then
-				if x < 1.5707963705 then
-					if x < 0.785398185 then
-						taylor_cos x
-					else
-						taylor_sin (1.5707963705 -. x)
+  let pi2 = 6.28318548202514 in
+  let pi = 3.1415927410 in
+  let pidiv2 = 1.5707963705 in  
+  let x = fabs x in
+  let x = x -. floor (x /. pi2) *. pi2 in
+		if x < pi then
+			if x < pidiv2 then
+        let pidiv4 = 0.785398185 in
+				if x < pidiv4 then
+					taylor_cos x
 				else
-					if x < 2.35619455 then
-						0.0 -. taylor_sin (x -. 1.5707963705)
-					else
-						0.0 -. taylor_cos (3.1415927410 -. x)
+					taylor_sin (pidiv2 -. x)
 			else
-				let y = x -. 3.1415927410 in
-					if y < 1.5707963705 then
-						if y < 0.785398185 then
-							0.0 -. taylor_sin y
-						else
-							0.0 -. taylor_cos (1.5707963705 -. y)
+      let pidiv15 = 2.35619455 in
+				if x < pidiv15 then
+					0.0 -. taylor_sin (x -. pidiv2)
+				else
+					0.0 -. taylor_cos (pi -. x)
+		else
+			let y = x -. pi in
+				if y < pidiv2 then
+          let pidiv4 = 0.785398185 in
+					if y < pidiv4 then
+						0.0 -. taylor_sin y
 					else
-						if y < 2.35619455 then
-							taylor_sin (y -. 1.5707963705)
-						else
-							taylor_cos (3.1415927410 -. y)
-	else
-		cos (0.0 -. x)
+						0.0 -. taylor_cos (pidiv2 -. y)
+				else
+        let pidiv15 = 2.35619455 in
+					if y < pidiv15 then
+						taylor_sin (y -. pidiv2)
+					else
+						taylor_cos (pi -. y)
 in
 let rec sin x =
+  let pi2 = 6.28318548202514 in
+  let pi = 3.1415927410 in
+  let pidiv2 = 1.5707963705 in 
     if x >= 0.0 then
-        if x >  6.28318548202514 then
-            sin (x -.  6.28318548202514)
-        else
-            if x < 3.1415927410 then
-                if x < 1.5707963705 then
-                    if x < 0.785398185 then
-                        taylor_sin x
-                    else
-                        taylor_cos (1.5707963705 -. x)
-                else
-                    if x < 2.35619455 then
-                        taylor_cos (x -. 1.5707963705)
-                    else
-                        taylor_sin (3.1415927410 -. x)
-            else
-                let y = x -. 3.1415927410 in
-                    if y < 1.5707963705 then
-                        if y < 0.785398185 then
-                            0.0 -. taylor_sin y
-                        else
-                            0.0 -. taylor_cos (1.5707963705 -. y)
-                    else
-                        if y < 2.35619455 then
-                            0.0 -. taylor_cos (y -. 1.5707963705)
-                        else
-                            0.0 -. taylor_sin (3.1415927410 -. y)
-    else
-        0.0 -. sin (0.0 -. x)
+        let x = x -. floor (x /. pi2) *. pi2 in
+          if x < pi then
+              if x < pidiv2 then
+                let pidiv4 = 0.785398185 in
+                  if x < pidiv4 then
+                      taylor_sin x
+                  else
+                      taylor_cos (pidiv2 -. x)
+              else
+                let pidiv15 = 2.35619455 in
+                  if x < pidiv15 then
+                      taylor_cos (x -. pidiv2)
+                  else
+                      taylor_sin (pi -. x)
+          else
+              let y = x -. pi in
+                  if y < pidiv2 then
+                    let pidiv4 = 0.785398185 in
+                      if y < pidiv4 then
+                          0.0 -. taylor_sin y
+                      else
+                          0.0 -. taylor_cos (pidiv2 -. y)
+                  else
+                  let pidiv15 = 2.35619455 in
+                      if y < pidiv15 then
+                          0.0 -. taylor_cos (y -. pidiv2)
+                      else
+                          0.0 -. taylor_sin (pi -. y)
+     else
+        let x = fabs x in
+        let tmp =
+            let x = x -. floor (x /. pi2) *. pi2 in
+          if x < pi then
+              if x < pidiv2 then
+              let pidiv4 = 0.785398185 in
+                  if x < pidiv4 then
+                      taylor_sin x
+                  else
+                      taylor_cos (pidiv2 -. x)
+              else
+                let pidiv15 = 2.35619455 in
+                  if x < pidiv15 then
+                      taylor_cos (x -. pidiv2)
+                  else
+                      taylor_sin (pi -. x)
+          else
+              let y = x -. pi in
+                  if y < pidiv2 then
+                    let pidiv4 = 0.785398185 in
+                      if y < pidiv4 then
+                          0.0 -. taylor_sin y
+                      else
+                          0.0 -. taylor_cos (pidiv2 -. y)
+                  else
+                    let pidiv15 = 2.35619455 in
+                      if y < pidiv15 then
+                          0.0 -. taylor_cos (y -. pidiv2)
+                      else
+                          0.0 -. taylor_sin (pi -. y) in
+        0.0 -. tmp
 in
 let rec taylor_atan x =
     let x2 = x *. x in

@@ -112,7 +112,7 @@ and g' i val_env ty_env = function (*let文の中以外でcreate_arrayがあっ�
      let ty_env' = add_ty_env i1 t ty_env in     
      let e2' = g' i val_env' ty_env' e2 in
      Let((i1, t), e1', e2')
-  | ExtFunApp(x, ys) ->
+(*  | ExtFunApp(x, ys) ->
      (if (x = "create_float_array" || x = "create_array") && (!is_valid ) = 0
       then
         (  (*Id.print_id i;*)
@@ -125,7 +125,27 @@ and g' i val_env ty_env = function (*let文の中以外でcreate_arrayがあっ�
                     ExtFunApp(x, ys)        
        | _ -> assert false)
       else
-        ExtFunApp(x, ys))
+        ExtFunApp(x, ys))*)
+  | Array(x, y) ->
+     if (!is_valid) = 0 then              
+       let head = !curr_heap in
+       let size = val_find x val_env in 
+       curr_heap := head + (size * heap_size);
+       Format.eprintf "%s //array// %d@." i head;
+       add_heap_env i head;
+       Array(x, y)
+      else
+       Array(x, y) 
+  | Farray(x, y) ->
+     if (!is_valid) = 0 then
+       let head = !curr_heap in
+       let size = val_find x val_env in
+       curr_heap := head + (size * heap_size);
+       Format.eprintf "%s //array// %d@." i head;
+       add_heap_env i head;
+       Farray(x, y)
+      else
+       Farray(x, y)
   | Tuple(xs) ->
      if (!is_valid) = 0 then       
 (     let len = List.length xs in

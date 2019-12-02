@@ -153,21 +153,51 @@ and g' oc = function (* 各命令のアセンブリ生成 (caml2html: emit_gprim
   (* 復帰の仮想命令の実装 (caml2html: emit_restore) *)
   | NonTail(x), Restore(y) when List.mem x allregs ->
      let x = rename_reg x in let y = rename_reg y in
-     Printf.fprintf oc "\tlw\t%s, %s, %d ;nontail restore\n" x (rename_reg reg_sp) (offset y) 
-  (*     Printf.fprintf oc "\tld\t[%s + %d], %s\n" reg_sp (offset y) x *)
+     Printf.fprintf oc "\tlw\t%s, %s, %d ;nontail restore\n" x (rename_reg reg_sp) (offset y)
+ (*     Printf.fprintf oc "\tld\t[%s + %d], %s\n" reg_sp (offset y) x *)
   | NonTail(x), Restore(y) -> 
      assert (List.mem x allfregs);
      let x = rename_reg x in let y = rename_reg y in
-      Printf.fprintf oc "\tflw\t%s, %s, %d\n" x (rename_reg reg_sp) (offset y)
+     Printf.fprintf oc "\tflw\t%s, %s, %d\n" x (rename_reg reg_sp) (offset y)
+  | NonTail(x), Hpsave -> let x = rename_reg x in Printf.fprintf oc "\tadd\t%s, %s, %s\n" x (rename_reg reg_z) (rename_reg reg_hp)
+  | NonTail(w), Array(x, y, z, num) -> (*xは破壊してはいけないが、numは破壊して良い*)
+      let loop = Id.genid("create_array_loop") in
+      let fin = Id.genid("create_array_exit") in
+      let w = rename_reg w in let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in let reg_z = rename_reg reg_z in let reg_hp = rename_reg reg_hp in let num = rename_reg num in
+     Printf.fprintf oc "%s:\n\tbeq\t%s, %s, %s\n\tsw\t%s, %s, 0\n\taddi\t%s, %s, -1\n\taddi\t%s, %s, 4\n\tjal\t%s, %s\n%s:\n\tadd\t%s, %s, %s\n" loop reg_z num fin y reg_hp num num reg_hp reg_hp reg_z loop fin w reg_z z
+  | NonTail(w), Farray(x, y, z, num) ->
+      let loop = Id.genid("create_float_array_loop") in
+      let fin = Id.genid("create_float_array_exit") in
+      let w = rename_reg w in let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in let reg_z = rename_reg reg_z in let reg_hp = rename_reg reg_hp in let num = rename_reg num in
+      Printf.fprintf oc "%s:\n\tbeq\t%s, %s, %s\n\tfsw\t%s, %s, 0\n\taddi\t%s, %s, -1\n\taddi\t%s, %s, 4\n\tjal\t%s, %s\n%s:\n\tadd\t%s, %s, %s\n" loop num reg_z fin y reg_hp num num reg_hp reg_hp reg_z loop fin w reg_z z
+  | NonTail(_), Write(a, x, y, z) ->
+     let write = Id.genid("write") in
+     let actual = Id.genid("actual") in
+     let a = rename_reg a in let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in let reg_z = rename_reg reg_z in 
+     Printf.fprintf oc "%s:\n\tli\t%s, 0x7F000000\n\tlbu\t%s, %s, 8\n\tandi\t%s, %s, 8\n\taddi\t%s, %s, 8\n\tbeq\t%s, %s, %s\n%s:\n\tsb\t%s, %s, 4\n" write x y x y y z reg_z y z write actual a x
+  | NonTail(w), Read(a, b, x, y, z) ->
+     let read1 = Id.genid("read") in
+     let read2 = Id.genid("read") in
+     let read3 = Id.genid("read") in
+     let read4 = Id.genid("read") in
+     let w = rename_reg w in let b = rename_reg b in let a = rename_reg a in let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in let reg_z = rename_reg reg_z in      
+     Printf.fprintf oc "\tli\t%s, 0x7F000000\n\taddi\t%s, %s, 1\n%s:\n\tlbu\t%s, %s, 8\n\tandi\t%s, %s, 1\n\tbne\t%s, %s, %s\n\tlbu\t%s, %s, 0\n\tslli\t%s, %s, 8\n%s:\n\tlbu\t%s, %s, 8\n\tandi\t%s, %s, 1\n\tbne\t%s, %s, %s\n\tlbu\t%s, %s, 0\n\tor\t%s, %s, %s\n\tslli\t%s, %s, 8\n%s:\n\tlbu\t%s, %s, 8\n\tandi\t%s, %s, 1\n\tbne\t%s, %s, %s\n\tlbu\t%s,\
+ %s, 0\n\tor\t%s, %s, %s\n\tslli\t%s, %s, 8\n%s:\n\tlbu\t%s, %s, 8\n\tandi\t%s, %s, 1\n\tbne\t%s, %s, %s\n\tlbu\t%s,\
+ %s, 0\n\tor\t%s, %s, %s\n" x z reg_z read1 y x y y y z read1 b x a b read2 y x y y y z read2 b x a a b a a read3 y x y y y z read3 b x a a b a a read4 y x y y y z read4 b x w a b
+  | NonTail(x), Fabs(y) -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tfsgnjx\t%s, %s, %s\n" x y y
+  | NonTail(x), Fsqrt(y) -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tfsqrt\t%s, %s\n" x y
+  | NonTail(x), Fcvtsw(y) -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tfcvtsw\t%s, %s\n" x y
+  | NonTail(x), Fcvtws(y) -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tfcvtws\t%s, %s\n" x y
+                    
   (* 末尾だったら計算結果を第一レジスタにセットしてリターン (caml2html: emit_tailret) *)
-  | Tail, (Nop | St _ | StDF _ | Comment _ | Save _ as exp) -> (*結果が返ってくる必要なし, 戻りアドレスを気にする必要もなし*)
+  | Tail, (Nop | St _ | StDF _ | Comment _ | Save _ | Write _  as exp) -> (*結果が返ってくる必要なし, 戻りアドレスを気にする必要もなし*)
      g' oc (NonTail(Id.gentmp Type.Unit), exp);
      Printf.fprintf oc "\tjalr\t%s, %s, 0 ;tail unit\n" (rename_reg reg_z) (rename_reg reg_ra)
   (*      Printf.fprintf oc "\tnop\n"*)
-  | Tail, (Set _ | SetL _ |SetLi _ | Mov _ | Neg _ | Add _ | Addi _| Sub _ | Mul _ | Div _ | SLL _ | Srai _ | Ld _ | Feq _ | Fle _ as exp) -> (*結果は先頭のレジスタに入っている。*)
+  | Tail, (Set _ | SetL _ |SetLi _ | Mov _ | Neg _ | Add _ | Addi _| Sub _ | Mul _ | Div _ | SLL _ | Srai _ | Ld _ | Feq _ | Fle _ | Read _ | Hpsave | Array _ | Farray _ | Fcvtws _ as exp) -> (*結果は先頭のレジスタに入っている。*)
      g' oc (NonTail(regs.(0)), exp);
      Printf.fprintf oc "\tjalr\t%s, %s, 0 ;tail int return\n" (rename_reg reg_z) (rename_reg reg_ra)
-  | Tail, (FMovD _ | FNegD _ | FAddD _ | FSubD _ | FMulD _ | FDivD _ | LdDF _ | Fmv _ as exp) -> 
+  | Tail, (FMovD _ | FNegD _ | FAddD _ | FSubD _ | FMulD _ | FDivD _ | LdDF _ | Fmv _ | Fabs _ | Fsqrt _ | Fcvtsw _ as exp) -> 
      g' oc (NonTail(fregs.(0)), exp);
      Printf.fprintf oc "\tjalr\t%s, %s, 0 ;tail int return\n" (rename_reg reg_z) (rename_reg reg_ra)
   | Tail, (Restore(x) as exp) ->
