@@ -159,6 +159,15 @@ and g' dest cont regenv = function (* 各命令のレジスタ割り当て (caml
       else
         g'_call dest cont regenv exp (fun ys zs -> CallDir(Id.L(x), ys, zs)) ys zs
   | Save(x, y) -> assert false
+  | Hpsave -> (Ans(Hpsave), regenv)
+  | Read(a, b, x, y, z)  -> (Ans(Read(find a Type.Int regenv, find b Type.Int regenv, find x Type.Int regenv, find y Type.Int regenv, find z Type.Int regenv)), regenv)
+  | Write(a, x, y, z) -> (Ans(Write(find a Type.Int regenv, find x Type.Int regenv, find y Type.Int regenv, find z Type.Int regenv)), regenv)
+  | Array(x, y, z, a) -> (Ans(Array(find x Type.Int regenv, find y Type.Int regenv, find z Type.Int regenv, find a Type.Int regenv)), regenv)
+  | Farray(x, y, z, a) -> (Ans(Farray(find x Type.Int regenv, find y Type.Float regenv, find z Type.Int regenv, find a Type.Int regenv)), regenv)
+  | Fabs(x) -> (Ans(Fabs(find x Type.Float regenv)), regenv)
+  | Fsqrt(x) -> (Ans(Fsqrt(find x Type.Float regenv)), regenv)
+  | Fcvtsw(x) -> (Ans(Fcvtsw(find x Type.Int regenv)), regenv)
+  | Fcvtws(x) -> (Ans(Fcvtws(find x Type.Float regenv)), regenv)                
 and g'_if dest cont regenv exp constr e1 e2 = (* ifのレジスタ割り当て (caml2html: regalloc_if) *)
   let (e1', regenv1) = g dest cont regenv e1 in
   let (e2', regenv2) = g dest cont regenv e2 in

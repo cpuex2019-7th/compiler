@@ -189,6 +189,27 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
               Ans(St(z, x, V(offset))))         *)
       | _ -> assert false)
   | Closure.ExtArray(Id.L(x)) -> Ans(SetL(Id.L("min_caml_" ^ x)))
+  | Closure.Array(x, y) ->
+     let z = Id.genid "i" in
+     let num = Id.genid "num" in
+      Let((z, Type.Int), Hpsave, Let((num, Type.Int), Mov(x), Ans(Array(x, y, z, num)))) (*本当は返り値(Notail)がそのままzだと良いがそううまくはいかない、、*)
+  | Closure.Farray(x, y) ->
+     let z = Id.genid "i" in
+     let num = Id.genid "num" in          
+      Let((z, Type.Int), Hpsave, Let((num, Type.Int), Mov(x), Ans(Farray(x, y, z, num))))
+  | Closure.Print(x) ->
+     let a = Id.genid "pr" in let b = Id.genid "pr" in let c = Id.genid "pr" in
+     Let((a, Type.Int), Nop, Let((b, Type.Int), Nop, Let((c, Type.Int), Nop, Ans(Write(x, a, b, c)))))
+  | Closure.Read ->
+     let a = Id.genid "pr" in let b = Id.genid "pr" in let c = Id.genid "pr" in  let d = Id.genid "pr" in let e = Id.genid "e" in
+     Let((a, Type.Int), Nop, Let((b, Type.Int), Nop, Let((c, Type.Int), Nop, Let((d, Type.Int), Nop, Let((e, Type.Int), Nop, Ans(Read(a, b, c, d, e)))))))
+  | Closure.Fread ->
+     let a = Id.genid "pr" in let b = Id.genid "pr" in let c = Id.genid "pr" in let z = Id.genid "z" in let d = Id.genid "pr" in let e = Id.genid "e" in
+     Let((a, Type.Int), Nop, Let((b, Type.Int), Nop, Let((c, Type.Int), Nop, Let((d, Type.Int), Nop, Let((e, Type.Int), Nop, Let((z, Type.Int), Read(a, b, c, d, e), Ans(Fmv(z))))))))
+  | Closure.Fabs(x) -> Ans(Fabs(x))
+  | Closure.Fsqrt(x) -> Ans(Fsqrt(x))
+  | Closure.Fcvtsw(x) -> Ans(Fcvtsw(x))
+  | Closure.Fcvtws(x) -> Ans(Fcvtws(x))                               
 
 
 (* 関数の仮想マシンコード生成 (caml2html: virtual_h) *)

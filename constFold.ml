@@ -19,6 +19,10 @@ let add_ty_env i t=
 let find_ty_env i =
   M.find i (!ty_env)
 let heap_size = 4;;
+let closest_int i =
+  if i > 0.0 then int_of_float (i +. 0.5)
+  else
+    int_of_float (i -. 0.5)
   
 let rec g env = function (* 定数畳み込みルーチン本体 (caml2html: constfold_g) *)
   | Var(x) when memi x env -> Int(findi x env)
@@ -68,6 +72,10 @@ let rec g env = function (* 定数畳み込みルーチン本体 (caml2html: constfold_g) *)
      let i = Id.genid "put" in
      let j = Id.genid "offset" in
      Let((i, find_ty_env x), Int(findi x env + (heap_size * (findi y env))), Let((j, Type.Int), Int(0), Put(i, j, z)))
+  | Fabs(x) when memf x env -> Float(abs_float (findf x env))
+  | Fsqrt(x) when memf x env -> Float(sqrt (findf x env))
+  | Fcvtsw(x) when memi x env -> Float(float_of_int (findi x env))
+  | Fcvtws(x) when memf x env -> Int(closest_int (findf x env))     
   | e -> e
 
 let f = g M.empty

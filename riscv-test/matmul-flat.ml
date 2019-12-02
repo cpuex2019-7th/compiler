@@ -12,7 +12,7 @@ let rec loop1 i m n a b c =
    loop1 (i - 1) m n a b c) in
 let rec mul l m n a b c =
   loop1 (l - 1) m n a b c in
-let dummy = Array.make 0 0. in
+let dummyaa = Array.make 0 0. in
 let rec init i n mat =
   if i < 0 then () else
   (mat.(i) <- Array.make n 0.;
@@ -21,9 +21,9 @@ let rec make m n dummy =
   let mat = Array.make m dummy in
   init (m - 1) n mat;
   mat in
-let a = make 2 3 dummy in
-let b = make 3 2 dummy in
-let c = make 2 2 dummy in
+let a = make 2 3 dummyaa in
+let b = make 3 2 dummyaa in
+let c = make 2 2 dummyaa in
 a.(0).(0) <- 1.; a.(0).(1) <- 2.; a.(0).(2) <- 3.;
 a.(1).(0) <- 4.; a.(1).(1) <- 5.; a.(1).(2) <- 6.;
 b.(0).(0) <- 7.; b.(0).(1) <- 8.;
