@@ -116,6 +116,33 @@ let rec int_of_float x =
   fcvtws x in
 let rec float_of_int x =
   fcvtsw x in
+let rec div10 a = (*a is always larger than or eaqual to  zero*)
+  let b = float_of_int a in
+  let c = b *. 0.1 in
+  let d = floor c in
+  int_of_float d
+in
+let rec mod10 x = (*x is always larger than or equal to zero*)
+  let b = div10 x in
+  x - (b * 10)
+in
+let rec print_int_intl num sign =
+  if num = 0
+  then (if sign
+        then print_char 45
+        else ())
+  else ((print_int_intl (div10 num ) sign) ; print_char (48 + (mod10 num))) in
+let rec print_int num =
+  if num = 0
+  then print_char 48
+  else (let neg = num < 0 in
+        let num = if num >= 0
+                  then num
+                  else -num in
+        print_int_intl num neg)
+in
+  
+
 (*以下を改変: https://github.com/cpuex2016D/min-caml/blob/dev/2nd/mylib.ml*)
 
 let rec fhalf x = x *. 0.5 in

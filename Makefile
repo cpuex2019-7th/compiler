@@ -61,7 +61,7 @@ data/raytracer/minrt.s: $(RESULT) data/raytracer/minrt.ml
 data/raytracer/sld/contest.sld.bin: $(SLD)
 	cpuex_sld2bin $(SLD) $@
 data/raytracer/raytrace data/raytracer/raytrace.symbols: data/raytracer/minrt.s libmincaml.S 
-	cpuex_asm data/raytracer/raytrace data/raytracer/minrt.s libmincaml.S
+	cpuex_asm data/raytracer/raytrace data/raytracer/minrt.s 
 
 
 do_test: $(TESTS:%=test/%.cmp)
