@@ -360,12 +360,11 @@ let f aaflag oc (Prog(data, fundefs, e)) =
   Printf.fprintf oc "\tli\tx2, 1300000\n";
   Printf.fprintf oc "\tli\tx3, 0x0000000\n";
   (if aaflag = 0 then
-    (Printf.fprintf oc "\taddi\tx10, x0, 0xaa\n";
-     Printf.fprintf oc "\tsw\t%s, %s, %d ; nontail call directly starts\n" (rename_reg reg_ra) (rename_reg reg_sp) 0;
-     Printf.fprintf oc "\taddi\t%s, %s, %d\n"(rename_reg reg_sp) (rename_reg reg_sp) 4;
-     Printf.fprintf oc "\tjal\t%s, write\n" (rename_reg reg_ra) ;
-     Printf.fprintf oc "\taddi\t%s, %s, -%d\n" (rename_reg reg_sp) (rename_reg reg_sp) 4;
-     Printf.fprintf oc "\tlw\t%s, %s, %d\n" (rename_reg reg_ra) (rename_reg reg_sp) 0;)
+     let write = Id.genid("write") in
+     let actual = Id.genid("actual") in
+     let a = "x10" in let y = "x5" in let z = "x6" in let x = "x7" in
+     Printf.fprintf oc "\taddi\t%s, x0, 0xaa\n" a ;
+     Printf.fprintf oc "%s:\n\tli\t%s, 0x7F000000\n\tlbu\t%s, %s, 8\n\tandi\t%s, %s, 8\n\taddi\t%s, %s, 8\n\tbeq\t%s,  %s, %s\n%s:\n\tsb\t%s, %s, 4\n" write x y x y y z (rename_reg reg_z) y z write actual a x
   else ());
   g oc (NonTail("x0"), e);
   (*  Printf.fprintf oc "\tadd\tx10, x4, x0 ; set output to a0 register\n"; (*デバッグ結果をx10に出力する*)*)

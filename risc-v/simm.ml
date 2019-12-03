@@ -19,7 +19,6 @@ and g' env = function (* 各命令の13bit即値最適化 (caml2html: simm13_gpr
   | Sub(x, V(y)) when M.mem y env -> Addi(x, C(-(M.find y env)))
   | Div(x, V(y)) when M.mem y env -> let v = M.find y env in
                                      if v = 2 then Srai(x, C(1))
-                                     else if v = 10 then CallDir(Id.L("min_caml_div10"), [x], [])
                                      else failwith "div instruction is not allowed other than 2, 10"
   | Mul(x, V(y)) when M.mem y env -> let v = M.find y env in
                                      if v = 4 then SLL(x, C(2))
