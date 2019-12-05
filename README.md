@@ -18,12 +18,12 @@ make riscv_test
 ```
 ## Options
 * `-g` min-caml code is compiled with some library neccesary for raytracing program
-* `-sim` do not emit 0xaa to the output file
+* `-sim` no need because the current version of simulator ignores first output word(do not emit 0xaa to the output file)
 
 ## Simulating raytracer program
 Raytracer program can be simulated by following code.(Assembler and simulater are neccessary)
 ```sh
-./min-caml -g -sim data/raytracer/minrt && cpuex_sld2bin data/raytracer/sld/contest.sld data/raytracer/sld/contest.sld.bin && cpuex_asm raytrace data/raytracer/minrt.s libmincaml.S && cpuex_sim raytrace -o output.ppm -i data/raytracer/sld/contest.sld.bin
+./min-caml -g  data/raytracer/minrt && cpuex_sld2bin data/raytracer/sld/contest.sld data/raytracer/sld/contest.sld.bin && cpuex_asm raytrace data/raytracer/minrt.s libmincaml.S && cpuex_sim raytrace -o output.ppm -i data/raytracer/sld/contest.sld.bin
 ```
 You can do in following code instead. As default, file will be compiled with no inlining optimization and stat file 'stat.txt' and output figure 'output.ppm' will be created.
 ```sh
