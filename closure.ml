@@ -1,3 +1,5 @@
+let cl_flag = ref 0
+
 type closure = { entry : Id.l; actual_fv : Id.t list }
 type t = (* クロージャ変換後の式 (caml2html: closure_t) *)
   | Unit
@@ -108,6 +110,7 @@ let rec g env known = function (* クロージャ変換ルーチン本体 (caml2html: closure
       if S.mem x (fv e2') then (* xが変数としてe2'に出現するか *)
         (*      (          Id.print_id x; assert false;*)
         (Format.eprintf "!!!!! closure created %s@." x;
+        cl_flag := 1 + !cl_flag;
      MakeCls((x, t), { entry = Id.L(x); actual_fv = zs }, e2')) (* 出現していたら削除しない *)
       else
         (Format.eprintf "eliminating closure(s) %s@." x;

@@ -141,11 +141,13 @@ and g' oc = function (* 各命令のアセンブリ生成 (caml2html: emit_gprim
   | NonTail(_), Comment(s) -> () (*コメントアウトの仕方要確認 Printf.fprintf oc "\t! %s\n" s*)
   (* 退避の仮想命令の実装 (caml2html: emit_save) *)
   | NonTail(_), Save(x, y) when List.mem x allregs && not (S.mem (rename_reg y) !stackset) -> (*スタックにない整数レジスタの退避*)
+     if y = Id.izero then assert false else ();
      let x = rename_reg x in let y = rename_reg y in
      save y;
      Printf.fprintf oc "\tsw\t%s, %s, %d ; nontail,save\n" x (rename_reg reg_sp) (offset y) (*スタックポインタからオフセット分ずらしてstore*)
   (*      Printf.fprintf oc "\tst\t%s, [%s + %d]\n" x reg_sp (offset y) *)
   | NonTail(_), Save(x, y) when List.mem x allfregs && not (S.mem (rename_reg y) !stackset) ->
+     if y = Id.fzero then assert false else ();     
      let x = rename_reg x in let y = rename_reg y in
       save y;
       Printf.fprintf oc "\tfsw\t%s, %s,  %d ; nontail, save\n" x (rename_reg reg_sp) (offset y)
@@ -156,7 +158,7 @@ and g' oc = function (* 各命令のアセンブリ生成 (caml2html: emit_gprim
      Printf.fprintf oc "\tlw\t%s, %s, %d ;nontail restore\n" x (rename_reg reg_sp) (offset y)
  (*     Printf.fprintf oc "\tld\t[%s + %d], %s\n" reg_sp (offset y) x *)
   | NonTail(x), Restore(y) -> 
-     assert (List.mem x allfregs);
+     assert (if List.mem x allfregs then true else (Printf.eprintf "%s %s" x y; false));
      let x = rename_reg x in let y = rename_reg y in
      Printf.fprintf oc "\tflw\t%s, %s, %d\n" x (rename_reg reg_sp) (offset y)
   | NonTail(x), Hpsave -> let x = rename_reg x in Printf.fprintf oc "\tadd\t%s, %s, %s\n" x (rename_reg reg_z) (rename_reg reg_hp)
@@ -244,16 +246,16 @@ and g' oc = function (* 各命令のアセンブリ生成 (caml2html: emit_gprim
       g'_non_tail_if oc (NonTail(z)) e1 e2 "fble" "fbg" x y *)
   (* 関数呼び出しの仮想命令の実装 (caml2html: emit_call) *)
   | Tail, CallCls(x, ys, zs) -> (* 末尾呼び出し (caml2html: emit_tailcall) *)
-     g'_args oc [(x, reg_cl)] ys zs;
+     g'_args oc x [(x, reg_cl)] ys zs;
      Printf.fprintf oc "\tlw\t%s, %s, 0 ; tail call closure routine\n" (rename_reg reg_sw) (rename_reg reg_cl);
      Printf.fprintf oc "\tjalr\t%s, %s, 0 ; tail call closure routine\n" (rename_reg reg_z) (rename_reg reg_sw)
   | Tail, CallDir(Id.L(x), ys, zs) -> (* 末尾呼び出し *)
-     g'_args oc [] ys zs;
+     g'_args oc x [] ys zs;
 (*     Printf.fprintf oc "\tli\t%s, %%lo(%s) ;set address for call dir routine\n" (rename_reg reg_cl) (rename_reg x);
      Printf.fprintf oc "\tjalr\t%s, %s, 0 ; tail call dir routine\n" (rename_reg reg_z) (rename_reg reg_cl)*)
      Printf.fprintf oc "\tjal\t%s, %s ; tail call directly routine\n" (rename_reg reg_z) (rename_reg x)
   | NonTail(a), CallCls(x, ys, zs) -> (*closureを用いた関数呼び出し*)
-      g'_args oc [(x, reg_cl)] ys zs;
+      g'_args oc x [(x, reg_cl)] ys zs;
       let ss = stacksize () in
       Printf.fprintf oc "\tsw\t%s, %s, %d ; nontail call closure routine starts\n" (rename_reg reg_ra) (rename_reg reg_sp) (ss - 4);
       Printf.fprintf oc "\tlw\t%s, %s, 0\n" (rename_reg reg_sw) (rename_reg reg_cl);
@@ -272,7 +274,7 @@ and g' oc = function (* 各命令のアセンブリ生成 (caml2html: emit_gprim
 (*        (Printf.fprintf oc "\tfmovs\t%s, %s\n" fregs.(0) a;
          Printf.fprintf oc "\tfmovs\t%s, %s\n" (co_freg fregs.(0)) (co_freg a)) *)
   | NonTail(a), CallDir(Id.L(x), ys, zs) -> (*closureを用いない関数呼び出し*)
-      g'_args oc [] ys zs;
+      g'_args oc x [] ys zs;
       let ss = stacksize () in
       Printf.fprintf oc "\tsw\t%s, %s, %d ; nontail call directly starts\n" (rename_reg reg_ra) (rename_reg reg_sp) (ss - 4);
       Printf.fprintf oc "\taddi\t%s, %s, %d\n"(rename_reg reg_sp) (rename_reg reg_sp) ss;
@@ -313,7 +315,7 @@ and g'_non_tail_if oc dest e1 e2 b bn x y=
   Printf.fprintf oc "%s:\n" b_cont;
   let stackset2 = !stackset in
   stackset := S.inter stackset1 stackset2
-and g'_args oc x_reg_cl ys zs =
+(*and g'_args oc x_reg_cl ys zs =
   let (i, yrs) =
     List.fold_left
       (fun (i, yrs) y -> (i + 1, (y, regs.(i)) :: yrs))
@@ -332,7 +334,34 @@ and g'_args oc x_reg_cl ys zs =
       Printf.fprintf oc "\tfadd\t%s, %s, %s ; args\n" (rename_reg fr)  (rename_reg reg_fz) (rename_reg z))
 (*      Printf.fprintf oc "\tfmovs\t%s, %s\n" z fr;
       Printf.fprintf oc "\tfmovs\t%s, %s\n" (co_freg z) (co_freg fr)) *)
-    (shuffle reg_fsw zfrs)
+    (shuffle reg_fsw zfrs)*)
+and g'_args oc name x_reg_cl ys zs =
+  let (regs, fregs) =
+  	try 
+		let data = M.find name !fundata in
+		let arg_regs = data.arg_regs in
+		let (reg_ls, freg_ls) = List.partition (fun x -> List.mem x Asm.allregs) arg_regs in
+		(Array.of_list reg_ls, Array.of_list freg_ls)
+	with
+  		| Not_found -> print_endline ("not found args: " ); (Asm.regs, Asm.fregs) in
+
+  let (i, yrs) =
+    List.fold_left
+      (fun (i, yrs) y -> (i + 1, (y, regs.(i)) :: yrs))
+      (0, x_reg_cl)
+      ys in
+  List.iter
+    (fun (y, r) -> Printf.fprintf oc "\tadd\t%s, %s, %s ; args\n" (rename_reg r) (rename_reg y) (rename_reg reg_z))
+    (shuffle reg_sw yrs);
+  let (d, zfrs) =
+    List.fold_left
+      (fun (d, zfrs) z -> (d + 1, (z, fregs.(d)) :: zfrs))
+      (0, [])
+      zs in
+  List.iter
+    (fun (z, fr) ->
+      Printf.fprintf oc "\tfadd\t%s, %s, %s ; args\n" (rename_reg fr)  (rename_reg reg_fz) (rename_reg z))
+      (shuffle reg_fsw zfrs)
 
 
 let h oc { name = Id.L(x); args = _; fargs = _; body = e; ret = _ } =

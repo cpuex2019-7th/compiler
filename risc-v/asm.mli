@@ -82,3 +82,12 @@ val align : int -> int
 
 
   
+type fundata = {arg_regs : Id.t list; ret_reg : Id.t; use_regs : S.t}
+val fundata : fundata M.t ref
+val fletd : Id.t * exp * t -> t
+val seq : exp * t -> t                              
+                
+val get_arg_regs : M.key -> Id.t list
+val get_ret_reg : M.key -> Id.t
+val get_use_regs : M.key -> S.t
+                             

@@ -3,6 +3,8 @@ type l = L of string (* トップレベル関数やグローバル配列のラベル (caml2html: id_
 let izero = "zero"
 let fzero = "fzero"
 
+let get_name (L x) = x          
+
 let rec pp_list = function
   | [] -> ""
   | [x] -> x
