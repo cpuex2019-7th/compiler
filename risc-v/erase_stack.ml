@@ -97,7 +97,8 @@ and erase_save_sub xx yy = function
 let rec g env = function
   | Ans(exp) -> Ans(g' env exp)
   | Let((x, t), Restore(y), exp) ->
-     if (can_erase x y exp) > 0 then (snd (erase_save x y (g env exp))) else Let((x, t), Restore(y), g env exp)
+     if (can_erase x y exp) > 0 then (Format.eprintf "erase %s %s\n" x y ;(snd (erase_save x y (g env exp))))
+     else Let((x, t), Restore(y), g env exp)
   | Let((x, t), a, exp) -> Let((x, t), g' env a, g env exp)
 and g' env = function
   | IfEq(x, y, e1, e2) -> IfEq(x, y, g env e1, g env e2)

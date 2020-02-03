@@ -7,10 +7,29 @@ external getlo : float -> int32 = "getlo"
 
 let stackset = ref S.empty (* すでにSaveされた変数の集合 (caml2html: emit_stackset) *)
 let stackmap = ref [] (* Saveされた変数の、スタックにおける位置 (caml2html: emit_stackmap) *)
+
+let rec get_all_num li =
+  match li with
+  | [] -> []
+  | (_, n) :: ls -> n :: (get_all_num ls)
+let smallest_num () =
+  let all_num = get_all_num !stackmap in
+  let rec fi ans all_num =
+    if List.mem ans all_num then fi (ans + 1) all_num else ans
+  in fi 1 all_num
+let largest_num () =
+  let all_num = get_all_num !stackmap in
+  let rec fi a all_num =
+    match all_num with
+    | [] -> a
+    | n :: ns -> if n > a then fi n all_num else fi a all_num
+  in fi 0 all_num
+   
 let save x =
   stackset := S.add x !stackset;
-  if not (List.mem x !stackmap) then
-    stackmap := !stackmap @ [x]
+  if not (List.mem_assoc x !stackmap) then
+    let n = smallest_num () in
+    stackmap := !stackmap @ [(x, n)]
 (*let savef x = (*floatだけだからいらなさそう*)
   stackset := S.add x !stackset;
   if not (List.mem x !stackmap) then
@@ -20,14 +39,15 @@ let save x =
 let locate x =
   let rec loc = function
     | [] -> []
-    | y :: zs when x = y -> 0 :: List.map succ (loc zs)
-    | y :: zs -> List.map succ (loc zs) in
-  loc !stackmap
+    | (y, yn) :: zs when x = y -> (yn - 1) :: (loc zs)
+    | (y, yn) :: zs -> (loc zs) in
+  loc !stackmap 
+  
 let offset x =
   match locate x with
   | [] -> Id.print_id x; assert false
   | _ ->    4 * List.hd (locate x)
-let stacksize () = align ((List.length !stackmap + 1) * 4)
+let stacksize () = align (((largest_num ()) + 1) * 4)
 
 let pp_id_or_imm = function
   | V(x) -> rename_reg x
