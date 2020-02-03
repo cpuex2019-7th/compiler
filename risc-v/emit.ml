@@ -2,6 +2,8 @@
 
 open Asm
 
+let program = ref []   
+
 external gethi : float -> int32 = "gethi"
 external getlo : float -> int32 = "getlo"
 
@@ -48,7 +50,7 @@ let rec shuffle sw xys =
                                          xys)
   | xys, acyc -> acyc @ shuffle sw xys
 
-
+let add a = program := !program @ [a]
                
 type dest = Tail | NonTail of Id.t (* 末尾かどうかを表すデータ型 (caml2html: emit_dest) *)
 let rec g oc = function (* 命令列のアセンブリ生成 (caml2html: emit_g) *)
@@ -61,96 +63,128 @@ and g' oc = function (* 各命令のアセンブリ生成 (caml2html: emit_gprim
   | NonTail(_), Nop -> ()
   | NonTail(x), Set(i) -> let x = rename_reg x in
                           if -2048 <= i && i < 2048 then(*iの大きさでliとaddiを変える*)
-                            Printf.fprintf oc "\taddi\t%s, %s, %d ; set\n" x (rename_reg reg_z) i 
+                            add (Out.Addi (x, (rename_reg reg_z), (string_of_int i)))
                           else
-                            Printf.fprintf oc "\tli\t%s, %d ; set\n" x i 
-  | NonTail(x), SetL(Id.L(y)) -> let y = rename_reg y in let x = rename_reg x in Printf.fprintf oc "\tli\t%s, %%lo(%s); setl\n" x  y
-  | NonTail(x), SetLi(Id.L(y)) -> let x = rename_reg x in Printf.fprintf oc "\tli\t%s, %s ; setli\n" x y
-  | NonTail(x), Fmv(y) -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tfmvwx\t%s, %s; fmv\n" x y
+                            add (Out.Li (x, (string_of_int i))
+  | NonTail(x), SetL(Id.L(y)) -> let y = rename_reg y in let x = rename_reg x in add (Out.Lilo(x, y))
+  | NonTail(x), SetLi(Id.L(y)) -> let x = rename_reg x in  add (Out.Li(x, y)
+  | NonTail(x), Fmv(y) -> let x = rename_reg x in let y = rename_reg y in add (Out.Fmvwx(x, y))
   | NonTail(x), Mov(y) when x = y -> ()
-  | NonTail(x), Mov(y) -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tadd\t%s, %s, %s ; mov\n" x (rename_reg reg_z) y
-  | NonTail(x), Neg(y) -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tsub\t%s, %s, %s ; neg\n" x (rename_reg reg_z) y
-  | NonTail(x), Add(y, z') -> if (z' = V(reg_z) && x = y) || (y = reg_z && (rename_reg x) = pp_id_or_imm z') then () else let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tadd\t%s, %s, %s ; add\n" x y (pp_id_or_imm z') (*immは来ないはず*)
-  | NonTail(x), Addi(y, z') -> if z' = C(0) && x = y then () else let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\taddi\t%s, %s, %s ; addi\n" x y (pp_id_or_imm z') 
-  | NonTail(x), Sub(y, z') -> if (z' = V(reg_z) && x = y) then () else let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tsub\t%s, %s, %s ; sub\n" x y (pp_id_or_imm z')
-  | NonTail(x), Mul(y, z') -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tmul\t%s, %s, %s ; mul\n" x y (pp_id_or_imm z')
-  | NonTail(x), Div(y, z') -> let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tdiv\t%s, %s, %s ; div\n" x y (pp_id_or_imm z')        
-  | NonTail(x), SLL(y, z') -> if (z' = C(0) && x = y) then () else let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tslli\t%s, %s, %s ; sll\n" x y (pp_id_or_imm z')
-  | NonTail(x), Srai(y, z') -> if (z' = C(0) && x = y) then () else let x = rename_reg x in let y = rename_reg y in Printf.fprintf oc "\tsrai\t%s, %s, %s ; sll\n" x y (pp_id_or_imm z') (*z'には数字(2)しかないはず*)
+  | NonTail(x), Mov(y) -> let x = rename_reg x in let y = rename_reg y in add (Out.Add(x, (rename_reg reg_z), y))
+  | NonTail(x), Neg(y) -> let x = rename_reg x in let y = rename_reg y in add (Out.Sub(x, (rename_reg reg_z), y))
+  | NonTail(x), Add(y, z') -> if (z' = V(reg_z) && x = y) || (y = reg_z && (rename_reg x) = pp_id_or_imm z') then () else let x = rename_reg x in let y = rename_reg y in add (Out.Add(x, y, (pp_id_or_imm z')))
+  | NonTail(x), Addi(y, z') -> if z' = C(0) && x = y then () else
+                                 let x = rename_reg x in
+                                 let y = rename_reg y
+                                 in add (Out.Addi(x, y, (pp_id_or_imm z')))
+  | NonTail(x), Sub(y, z') -> if (z' = V(reg_z) && x = y) then () else
+                                let x = rename_reg x in
+                                let y = rename_reg y in
+                                add (Out.Sub(x, y, (pp_id_or_imm z')))
+  | NonTail(x), Mul(y, z') -> let x = rename_reg x in let y = rename_reg y
+                                                      in
+                                                      add (Out.Mul(x, y, (pp_id_or_imm z')))
+  | NonTail(x), Div(y, z') -> let x = rename_reg x in let y = rename_reg y in
+                                                      add (Out.Div(x, y, (pp_id_or_imm z')))
+  | NonTail(x), SLL(y, z') -> if (z' = C(0) && x = y) then () else
+                                let x = rename_reg x in
+                                let y = rename_reg y in
+                                add (Out.Slli(x, y, (pp_id_or_imm z')))
+  | NonTail(x), Srai(y, z') -> if (z' = C(0) && x = y) then () else
+                                 let x = rename_reg x in
+                                 let y = rename_reg y in
+                                 add (Out.Srai(x, y, (pp_id_or_imm z')))
   | NonTail(x), Ld(y, z') -> (*オフセットの値をどこかのレジスタに入れるようにすれば命令数は減るが、使うレジスタが増える*)
      let x = rename_reg x in
      let y = rename_reg y in
      (match z' with
-      | V(a) when a = reg_z -> Printf.fprintf oc "\tlw\t%s, %s, 0 ; ld\n" x y
+      | V(a) when a = reg_z ->
+         add (Out.Lw(x, y, "0"))
       | V(_) ->         
          if (x = y) then (*もうyの値は使わない*)
-           Printf.fprintf oc "\tadd\t%s, %s, %s\n\tlw\t%s, %s, 0 ;ld\n" y y (pp_id_or_imm z') x y
+           (add (Out.Add(y, y, (pp_id_or_imm z')));
+            add (Out.Lw(x, y, "0")))         
          else if (x = (pp_id_or_imm z')) then (*もうxの値は使わない*)
-           Printf.fprintf oc "\tadd\t%s, %s, %s ; ld\n\tlw\t%s, %s, 0 ; ld\n" (pp_id_or_imm z') y (pp_id_or_imm z') x (pp_id_or_imm z')
+           (add (Out.Add((pp_id_or_imm z'), y, (pp_id_or_imm z')));
+            add (Out.Lw(x, (pp_id_or_imm z'), "0")))
          else (*xもz'も使う可能性があるので、値を元に戻す引く*)
-           Printf.fprintf oc "\tadd\t%s, %s, %s ; ld start \n\tlw\t%s, %s, 0\n\tsub\t%s, %s, %s ; ld end\n" y y (pp_id_or_imm z') x y y y (pp_id_or_imm z')
+           (add (Out.Add(y, y, (pp_id_or_imm z')));
+            add (Out.Lw(x, y, "0"));
+            add (Out.Sub(y, y, (pp_id_or_imm z'))))
       | _ -> (*zは数字なので、そのままoffsetにかく*)
-         Printf.fprintf oc "\tlw\t%s, %s, %s ; ld\n" x y (pp_id_or_imm z')
-     )(*Printf.fprintf oc "\tld\t[%s + %s], %s\n" y (pp_id_or_imm z') x*)
+         add (Out.Lw(x, y, (pp_id_or_imm z'))))
   | NonTail(_), St(x, y, z') ->
      let x = rename_reg x in
      let y = rename_reg y in
      (match z' with
-      |V(a) when a = reg_z -> Printf.fprintf oc "\tsw\t%s, %s, 0\n" x y
+      |V(a) when a = reg_z ->
+        add (Out.Sw(x, y, "0"))
       |V(_) ->
-         if (x = y) then (*もうyの値は使わない*)
-           Printf.fprintf oc "\tadd\t%s, %s, %s\n\tsw\t%s, %s, 0\n" y y (pp_id_or_imm z') x y
-         else if (x = (pp_id_or_imm z')) then (*もうxの値は使わない*)
-           Printf.fprintf oc "\tadd\t%s, %s, %s\n\tsw\t%s, %s, 0\n" (pp_id_or_imm z') y (pp_id_or_imm z') x (pp_id_or_imm z')
-         else (*xもz'も使う可能性があるので、値を元に戻す引く*)
-           Printf.fprintf oc "\tadd\t%s, %s, %s\n\tsw\t%s, %s, 0\n\tsub\t%s, %s, %s\n" y y (pp_id_or_imm z') x y y y (pp_id_or_imm z')
+        if (x = y) then (*もうyの値は使わない*)
+          (add (Out.Add(y, y, (pp_id_or_imm z')));
+           add (Out.Sw(x, y, "0")))
+        else if (x = (pp_id_or_imm z')) then (*もうxの値は使わない*)
+          (add (Out.Add((pp_id_or_imm z'), y, (pp_id_or_imm z')));
+           add (Out.Sw(x, (pp_id_or_imm z'), "0")))
+        else (*xもz'も使う可能性があるので、値を元に戻す引く*)
+          (add (Out.Add(y, y, (pp_id_or_imm z')));
+           add (Out.Sw(x, y, "0"));
+           add (Out.Sub(y, y, (pp_id_or_imm z'))))
       | _ -> (*zは数字なので、そのままoffsetにかく*)
-         Printf.fprintf oc "\tsw\t%s, %s, %s\n" x y (pp_id_or_imm z')
-  )(*Printf.fprintf oc "\tst\t%s, [%s + %s]\n" x y (pp_id_or_imm z')*)
+         add (Out.Sw(x, y, (pp_id_or_imm z'))))
   | NonTail(x), FMovD(y) when x = y -> ()
   | NonTail(x), FMovD(y) -> (*一旦飛ばす*)
      let x = rename_reg x in let y = rename_reg y in
-     Printf.fprintf oc "\tfadd\t%s, %s, %s\n" x (rename_reg reg_fz) y
-  | NonTail(x), FNegD(y) -> (*一旦飛ばす*)
+                             add (Out.Fadd(x, (rename_reg reg_fz) y))
+  | NonTail(x), FNegD(y) -> (*一旦飛ばす*)     
      let x = rename_reg x in let y = rename_reg y in
-     Printf.fprintf oc "\tfsub\t%s, %s, %s\n" x (rename_reg reg_fz) y
-  | NonTail(x), FAddD(y, z) -> if (y = reg_fz && x = z) || (z = reg_fz && x = y) then () else let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in Printf.fprintf oc "\tfadd\t%s, %s, %s ; fadd\n" x y z
-  | NonTail(x), FSubD(y, z) -> if (z = reg_fz && x = y) then () else let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in Printf.fprintf oc "\tfsub\t%s, %s, %s ; fsub\n" x y z
-  | NonTail(x), FMulD(y, z) -> let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in Printf.fprintf oc "\tfmul\t%s, %s, %s\n" x y z
-  | NonTail(x), FDivD(y, z) -> let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in Printf.fprintf oc "\tfdiv\t%s, %s, %s\n" x y z
-  | NonTail(x), Feq(y, z) -> let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in Printf.fprintf oc "\tfeq\t%s, %s, %s\n" x y z
-  | NonTail(x), Fle(y, z) -> let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in Printf.fprintf oc "\tfle\t%s, %s, %s\n" x y z
+                             add (Out.Fsub(x, (rename_reg reg_fz) y))
+  | NonTail(x), FAddD(y, z) -> if (y = reg_fz && x = z) || (z = reg_fz && x = y) then ()
+                               else let x = rename_reg x in
+                                    let y = rename_reg y in
+                                    let z = rename_reg z in
+                                    add (Out.Fadd(x,y,z))
+  | NonTail(x), FSubD(y, z) -> if (z = reg_fz && x = y) then ()
+                               else let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in add (Out.Fsub(x, y, z))
+  | NonTail(x), FMulD(y, z) -> let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in add (Out.Fmul(x, y, z))
+  | NonTail(x), FDivD(y, z) -> let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in add (Out.Fdiv(x, y, z))
+  | NonTail(x), Feq(y, z) -> let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in add (Out.Feq(x, y, z))
+  | NonTail(x), Fle(y, z) -> let x = rename_reg x in let y = rename_reg y in let z = rename_reg z in add (Out.Fle(x, y, z))
   | NonTail(x), LdDF(y, z') ->
      let x = rename_reg x in
      let y = rename_reg y in
      (match z' with
-      | V(a) when a = reg_z -> Printf.fprintf oc "\tflw\t%s, %s, 0\n" x y
-     | V(_) ->
-        Printf.fprintf oc "\tadd\t%s, %s, %s\n\tflw\t%s, %s, 0\n\tsub\t%s, %s, %s\n" y y (pp_id_or_imm z') x y y y (pp_id_or_imm z')
-     | _ ->
-        Printf.fprintf oc "\tflw\t%s, %s, %s\n" x y (pp_id_or_imm z'))
+      | V(a) when a = reg_z ->
+         add (Out.Flw(x, y, "0"))
+      | V(_) ->
+         (add (Out.Add(y, y, (pp_id_or_imm z')));
+          add (Out.Flw(x, y, "0"));
+          add (Out.Sub(y, y, (pp_id_or_imm z'))))
+      | _ ->
+         add (Out.Flw(x, y, (pp_id_or_imm z'))))
   | NonTail(_), StDF(x, y, z') ->
      let x = rename_reg x in
      let y = rename_reg y in
      (match z' with
-     | V(a) when a = reg_z -> Printf.fprintf oc "\tfsw\t%s, %s, 0\n" x y
+     | V(a) when a = reg_z -> add (Out.Fsw(x, y, "0"))
      | V(_) ->
-        Printf.fprintf oc "\tadd\t%s, %s, %s\n\tfsw\t%s, %s, 0\n\tsub\t%s, %s, %s\n" y y (pp_id_or_imm z') x y y y (pp_id_or_imm z')
+        (add (Out.Add(y, y, (pp_id_or_imm z')));
+         add (Out.Fsw(x, y, "0"));
+         add (Out.Sub(y, y, (pp_id_or_imm z'))))
      | _ ->
-        Printf.fprintf oc "\tfsw\t%s, %s, %s\n" x y (pp_id_or_imm z'))
+        add (Out.Fsw(x, y, (pp_id_or_imm z'))))
   | NonTail(_), Comment(s) -> () (*コメントアウトの仕方要確認 Printf.fprintf oc "\t! %s\n" s*)
   (* 退避の仮想命令の実装 (caml2html: emit_save) *)
   | NonTail(_), Save(x, y) when List.mem x allregs && not (S.mem (rename_reg y) !stackset) -> (*スタックにない整数レジスタの退避*)
      if y = Id.izero then assert false else ();
      let x = rename_reg x in let y = rename_reg y in
-     save y;
-     Printf.fprintf oc "\tsw\t%s, %s, %d ; nontail,save\n" x (rename_reg reg_sp) (offset y) (*スタックポインタからオフセット分ずらしてstore*)
-  (*      Printf.fprintf oc "\tst\t%s, [%s + %d]\n" x reg_sp (offset y) *)
+                             save y;
+                             add (Out.Sw(x, (rename_reg reg_sp), (string_of_int (offset y))))
   | NonTail(_), Save(x, y) when List.mem x allfregs && not (S.mem (rename_reg y) !stackset) ->
      if y = Id.fzero then assert false else ();     
      let x = rename_reg x in let y = rename_reg y in
-      save y;
-      Printf.fprintf oc "\tfsw\t%s, %s,  %d ; nontail, save\n" x (rename_reg reg_sp) (offset y)
+                             save y;
+                             add (Out.Fsw(x, (rename_reg reg_sp), (string_of_int (offset y))))
   | NonTail(_), Save(x, y) -> assert (S.mem (rename_reg y) !stackset); ()
   (* 復帰の仮想命令の実装 (caml2html: emit_restore) *)
   | NonTail(x), Restore(y) when List.mem x allregs ->
