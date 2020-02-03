@@ -40,12 +40,14 @@ let lexbuf outchan l glb_l= (* バッファをコンパイルしてチャンネ�
                                (Parser.exp Lexer.token l) (Parser.exp Lexer.token glb_l))))))))) in
   if !Closure.cl_flag > 0 then
       Emit.f !aaflag outchan (*generate assembly code*)
+        ( Erase_stack.f 
         (RegAlloc.f (*register allocation*)
-           sim)
+           sim))
   else
-        Emit.f !aaflag outchan (*generate assembly code*)
+    Emit.f !aaflag outchan (*generate assembly code*)
+      ( Erase_stack.f
       (RegAllocColor.f (*register allocation*)
-          (Block.f sim))
+          (Block.f sim)))
     
 (*  if (!gflag = 0) then
   Emit.f !aaflag outchan (*generate assembly code*)
