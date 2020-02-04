@@ -64,7 +64,7 @@ data/raytracer/raytrace data/raytracer/raytrace.symbols: data/raytracer/minrt.s 
 	cpuex_asm data/raytracer/raytrace data/raytracer/minrt.s 
 
 simple_raytrace: data/raytracer/raytrace $(BIN) data/raytracer/raytrace.symbols
-	cpuex_sim $< -i $(BIN) -o $(IMG) 
+	cpuex_sim $< -i $(BIN) -o $(IMG)
 .PRECIOUS: data/raytracer/minrt.s data/raytracer/contest.sld.bin data/raytracer/raytrace data/raytracer/raytrace.symbols
 TRASH = data/raytracer/minrt.s data/raytracer/contest.sld.bin data/raytracer/raytrace data/raytracer/raytrace.symbols
 data/raytracer/minrt.s: $(RESULT) data/raytracer/minrt.ml

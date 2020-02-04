@@ -74,7 +74,7 @@ and create_asm f block = function
 	| Block.CallCls (xt, name, args, fargs) -> (xt, Asm.CallCls (name, args, fargs), block)
 	| Block.CallDir (xt, Id.L name, args, fargs) -> (xt, Asm.CallDir (Id.L name, args, fargs), block)
 	| Block.Save (xt, x, y) -> (xt, Asm.Save (x, y), block)
-	| Block.Restore (xt, x) -> (xt, Asm.Restore x, block)
+	| Block.Restore (xt, x) -> (xt, Asm.Restore(x), block)
 	| Block.Hpsave xt-> (xt, Asm.Hpsave, block)
 	| Block.Array (xt, a, b, c, d) -> (xt, Asm.Array(a, b, c, d), block)
 	| Block.Farray (xt, a, b, c, d) -> (xt, Asm.Farray(a, b, c, d), block)

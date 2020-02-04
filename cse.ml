@@ -24,10 +24,10 @@ let find_exp e varenv original=
 
 let rec fukusayo e =
   match e with
-  | Put _ | App _ | ExtFunApp _ | Read | Fread | Array _ | Farray _| Print _ | STuple _ -> true
+  | Get _ | Put _ | App _ | ExtFunApp _ | Read | Fread | Array _ | Farray _| Print _ | STuple _  | Tuple _ -> true
   | IfEq(_, _, e1, e2) | IfLE(_, _, e1, e2) -> (fukusayo e1) || (fukusayo e2)
   | Let(_, e1, e2) -> (fukusayo e1 )|| (fukusayo e2)
-  | LetRec(_, e2) -> (fukusayo e2)
+  | LetRec(_, e2) -> fukusayo e2
   | LetTuple(_, _, e) -> fukusayo e
   | _ -> false
                                                       
@@ -97,4 +97,4 @@ let rec g varenv= function
 
       
 
-let f e = Format.eprintf "cse @."; expenv := MM.empty;  let (ans, _) = g M.empty e in ans
+let f e = Format.eprintf "cse @."; expenv := MM.empty;  let (ans, _) = g M.empty e in ans 

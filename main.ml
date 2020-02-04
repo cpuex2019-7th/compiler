@@ -6,7 +6,7 @@ let rec iter n e = (* 最適化処理をくりかえす (caml2html: main_iter) *
   Format.eprintf "iteration %d@." n;
   if n = 0 then Elim.f (Cse.f (ConstFold.f(Assoc.f (Beta.f  (Zero.f  (Closure_elim.f e)))) )) else
     let e' = Elim.f (*eliminate unecessary definition*)
-( Cse.f
+               ( Cse.f
                (ConstFold.f (*constant folding*)
                   (Inline.f (*inline expansion*)
                      (Assoc.f (*let reduction*)
