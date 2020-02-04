@@ -441,7 +441,6 @@ let build (fund: Block.fundef) =
 						(S.empty, S.of_list (fund.args @ fund.fargs)) 
 					else
 						(fun (a, b) -> (S.of_list a, S.of_list b)) (Block.def_use (rm_some instr)) in
-
 				(if instr_id <> "" && is_move_instruction (rm_some instr) then (
 					let instr = rm_some instr in
 					live := S.diff !live us;
