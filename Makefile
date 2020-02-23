@@ -22,10 +22,10 @@ clean:: nobackup
 SOURCES = float.c type.ml id.ml m.ml s.ml \
 syntax.ml parser.mly lexer.mll typing.mli typing.ml kNormal.mli kNormal.ml \
 alpha.mli alpha.ml beta.mli beta.ml assoc.mli assoc.ml \
-inline.mli inline.ml constFold.mli constFold.ml closure_elim.mli closure_elim.ml elim.mli elim.ml \
+inline.mli inline.ml constFold.mli constFold.ml closure_elim.mli closure_elim.ml cse.mli cse.ml elim.mli elim.ml \
 zero.mli zero.ml \
 closure.mli closure.ml asm.mli asm.ml virtual.mli virtual.ml \
-simm.mli simm.ml regAlloc.mli regAlloc.ml emit.mli emit.ml \
+simm.mli simm.ml regAlloc.mli regAlloc.ml block.ml live.ml color.ml block_to_asm.ml regAllocColor.ml emit.mli emit.ml \
 joinglb.ml joinglb.mli \
 main.mli main.ml 
 
@@ -54,6 +54,17 @@ INLINE = 0
 
 raytrace: data/raytracer/raytrace $(BIN) data/raytracer/raytrace.symbols
 	cpuex_sim $< -i $(BIN) -o $(IMG) --symbols data/raytracer/raytrace.symbols --statout $(STAT)
+.PRECIOUS: data/raytracer/minrt.s data/raytracer/contest.sld.bin data/raytracer/raytrace data/raytracer/raytrace.symbols
+TRASH = data/raytracer/minrt.s data/raytracer/contest.sld.bin data/raytracer/raytrace data/raytracer/raytrace.symbols
+data/raytracer/minrt.s: $(RESULT) data/raytracer/minrt.ml
+	./$(RESULT) -g  data/raytracer/minrt -iter $(ITER) -inline $(INLINE)
+data/raytracer/sld/contest.sld.bin: $(SLD)
+	cpuex_sld2bin $(SLD) $@
+data/raytracer/raytrace data/raytracer/raytrace.symbols: data/raytracer/minrt.s libmincaml.S 
+	cpuex_asm data/raytracer/raytrace data/raytracer/minrt.s 
+
+simple_raytrace: data/raytracer/raytrace $(BIN) data/raytracer/raytrace.symbols
+	cpuex_sim $< -i $(BIN) -o $(IMG) --statout $(STAT)
 .PRECIOUS: data/raytracer/minrt.s data/raytracer/contest.sld.bin data/raytracer/raytrace data/raytracer/raytrace.symbols
 TRASH = data/raytracer/minrt.s data/raytracer/contest.sld.bin data/raytracer/raytrace data/raytracer/raytrace.symbols
 data/raytracer/minrt.s: $(RESULT) data/raytracer/minrt.ml

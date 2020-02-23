@@ -132,4 +132,21 @@ let rec concat e1 xt e2 =
 
 let align i = (if i mod 8 = 0 then i else i + 4)
 
-            
+
+type fundata = {arg_regs : Id.t list; ret_reg : Id.t; use_regs : S.t}
+
+let fundata = ref (M.add "min_caml_truncate" { arg_regs = ["%f1"]; ret_reg = "%x10"; use_regs = S.of_list ["%x10"; "%f1"; "%f2"]} M.empty)
+
+let fletd(x, e1, e2) = Let((x, Type.Float), e1, e2)
+let seq(e1, e2) = Let((Id.gentmp Type.Unit, Type.Unit), e1, e2)
+
+let rec print_regs li =
+  (*  S.iter (fun l -> Format.eprintf "%s, " l) li*)
+  match li with
+  | [] -> ()
+  | l :: ls -> (Format.eprintf "%s, " l; print_regs ls)
+                
+let get_arg_regs x = try (M.find x !fundata).arg_regs with Not_found -> Printf.eprintf "Not_found %s\n" x; assert false
+let get_ret_reg x = try (M.find x !fundata).ret_reg with Not_found -> Printf.eprintf "Not_found %s\n" x; assert false
+let get_use_regs x = 
+	try (M.find x !fundata).use_regs with Not_found -> Printf.printf "\tNotFound %s\n" x; S.of_list (allregs @ allfregs)

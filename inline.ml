@@ -3,18 +3,31 @@ open KNormal
 (* インライン展開する関数の最大サイズ (caml2html: inline_threshold) *)
 let threshold = ref 0 (* Mainで-inlineオプションによりセットされる *)
 
+let env = ref M.empty
+    
+              
 let rec size = function
   | IfEq(_, _, e1, e2) | IfLE(_, _, e1, e2)
   | Let(_, e1, e2) | LetRec({ body = e1 }, e2) -> 1 + size e1 + size e2
   | LetTuple(_, _, e) -> 1 + size e
   | _ -> 1
-
+       
+let test_size e name =
+  let s = size e in
+  if M.mem name (!env) then
+    let original_size = M.find name (!env) in
+    let max = (!threshold)  -  (int_of_float (1.0 *. (float_of_int original_size))) in
+    s > max
+  else
+    (env := M.add name s (!env);
+     s > !threshold)
+  
 let rec g env = function (* インライン展開ルーチン本体 (caml2html: inline_g) *)
   | IfEq(x, y, e1, e2) -> IfEq(x, y, g env e1, g env e2)
   | IfLE(x, y, e1, e2) -> IfLE(x, y, g env e1, g env e2)
   | Let(xt, e1, e2) -> Let(xt, g env e1, g env e2)
   | LetRec({ name = (x, t); args = yts; body = e1 }, e2) -> (* 関数定義の場合 (caml2html: inline_letrec) *)
-      let env = if size e1 > !threshold then env else M.add x (yts, e1) env in
+      let env = if (test_size e1 x) then env else M.add x (yts, e1) env in
       LetRec({ name = (x, t); args = yts; body = g env e1}, g env e2)
   | App(x, ys) when M.mem x env -> (* 関数適用の場合 (caml2html: inline_app) *)
       let (zs, e) = M.find x env in

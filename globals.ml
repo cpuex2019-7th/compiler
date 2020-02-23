@@ -1,8 +1,8 @@
 (*open MiniMLRuntime;;*)
 
 (**************** グローバル変数の宣言 ****************)
-
-(*let rec fabs x = 0.0 +. fabs_lib x in
+(*
+let rec fabs x = 0.0 +. fabs_lib x in
     let rec sqrt x = 0.0 +. sqrt_lib x in
     let rec floor x = 0.0 +. floor_lib x in
     let rec int_of_float x = 0 + int_of_float_lib x in

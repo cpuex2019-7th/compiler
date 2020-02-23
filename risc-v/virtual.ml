@@ -91,7 +91,7 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
       | Type.Unit -> Ans(Nop)
       | Type.Float -> Ans(FMovD(x))
       | _ -> Ans(Mov(x)))
-  | Closure.MakeCls((x, t), { Closure.entry = l; Closure.actual_fv = ys }, e2) -> (* クロージャの生成 (caml2html: virtual_makecls) *)
+ | Closure.MakeCls((x, t), { Closure.entry = l; Closure.actual_fv = ys }, e2) -> (* クロージャの生成 (caml2html: virtual_makecls) *)
       (* Closureのアドレスをセットしてから、自由変数の値をストア *)
       let e2' = g (M.add x t env) e2 in
       let offset, store_fv =
@@ -218,11 +218,25 @@ let h { Closure.name = (Id.L(x), t); Closure.args = yts; Closure.formal_fv = zts
   let (offset, load) =
     expand
       zts
-      (4, g (M.add Id.izero Type.Int (M.add Id.fzero Type.Float (M.add x t (M.add_list yts (M.add_list zts M.empty))))) e)
+       (4, g (M.add Id.izero Type.Int (M.add Id.fzero Type.Float (M.add x t (M.add_list yts (M.add_list zts M.empty))))) e)
+      (*       (4, g (M.add x t (M.add_list yts (M.add_list zts M.empty))) e)*)
       (fun z offset load -> fletd(z, LdDF(x, C(offset)), load))
       (fun z t offset load -> Let((z, t), Ld(x, C(offset)), load)) in
+let (_, _, _, rs, frs) = List.fold_left
+							(fun (iregs, fregs, xs, rs, frs) (x, t) -> match t with
+								| Type.Unit -> (iregs, fregs, xs, rs, frs)
+								| Type.Float -> (iregs, List.tl fregs, xs @ [x], rs, frs @ [List.hd fregs])
+								| _ -> (List.tl iregs, fregs, xs @ [x], rs @ [List.hd iregs], frs)
+							) (allregs, allfregs, [], [], []) yts in  
   match t with
   | Type.Fun(_, t2) ->
+     let ret_reg = 
+				(match t2 with
+					| Type.Unit -> "%dummy"
+					| Type.Float -> List.hd allfregs
+					| _ -> List.hd allregs) in
+     
+     fundata := M.add x {arg_regs = rs @ frs; ret_reg = ret_reg; use_regs = S.of_list (allregs @ allfregs)} !fundata;
       { name = Id.L(x); args = int; fargs = float; body = load; ret = t2 }
   | _ -> assert false
 
@@ -231,6 +245,7 @@ let f (Closure.Prog(fundefs, e)) =
   Format.eprintf "virtual@.";
   data := [];
   let fundefs = List.map h fundefs in
+  (*  let e = g M.empty e in*)
   let e = g (M.add Id.izero Type.Int ( M.add Id.fzero Type.Float M.empty)) e in
   Prog(!data, fundefs, e)
 

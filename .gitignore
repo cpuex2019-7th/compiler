@@ -7,3 +7,5 @@ raytracer.*
 *.bin
 raytrace.*
 minrt.s
+._d/
+._bcdi/
