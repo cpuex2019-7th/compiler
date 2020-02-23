@@ -588,7 +588,7 @@ let rec s_dif s li =
   | l :: ls -> s_dif (S.remove l s) ls
 
 let find_color remain =
-  Format.eprintf "%d\n" (S.cardinal remain);
+  (*  Format.eprintf "%d\n" (S.cardinal remain);*)
   if (S.cardinal remain) > 0 then
     let r  = ref remain in
     let a = ref ((!cc) mod S.cardinal remain) in
@@ -605,13 +605,12 @@ let find_color remain =
 let select_color fund n ok_colors =
   let ans = ref "" in
   (if M.mem n !together then
-     (Format.eprintf "find together %s \n" n;
-      Asm.print_regs (M.find n !together); Format.eprintf "\n";
+     ((*Format.eprintf "find together %s \n" n; Asm.print_regs (M.find n !together); Format.eprintf "\n";*)
       (if n = "num.6178.7794.13799" then let z = S.fold (fun x e -> x :: e) ok_colors [] in Asm.print_regs z else ());
      List.iter(
          fun a ->
          let a = if M.mem a !color then M.find a !color else a in
-         if S.mem a ok_colors then (ans := a; (Format.eprintf "ok_colour %s\n" a))else ()
+         if S.mem a ok_colors then (ans := a; ( (*Format.eprintf "ok_colour %s\n" a*) ))else ()
        )(M.find n !together))
   else if M.mem n !no_together then
     let no = M.find n !no_together in
