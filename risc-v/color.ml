@@ -1,9 +1,10 @@
 open Block
 
-
+let cc = ref 0
 let varenv = ref M.empty 
 let anyregs = Array.to_list (Array.init 32 (Printf.sprintf "%%x%d"))
 let anyfregs = Array.to_list (Array.init 32 (Printf.sprintf "%%f%d"))
+let hikisu_reg = S.of_list (["%x10"; "%x11"; "%x12"; "%x13"; "%f1"; "%f2"; "%f3" ])
 let diff_list ls1 ls2 =
         List.fold_left (
                 fun env x ->
@@ -405,7 +406,8 @@ let initialize is_first fundef =
 	adj_list := M.fold (fun x _ env -> M.add x S.empty env) !varenv M.empty;
 	degree := M.fold (fun x _ env -> M.add x 0 env) !varenv M.empty;
 	color := S.fold (fun x env -> M.add x x env) !precolored M.empty;
-        color := M.add Id.izero Asm.reg_z (M.add Id.fzero Asm.reg_fz !color);        
+        color := M.add Id.izero Asm.reg_z (M.add Id.fzero Asm.reg_fz !color);
+        
 	List.iter (fun x -> List.iter (fun y -> add_edge x y) fundef.args) fundef.args;
 	List.iter (fun x -> List.iter (fun y -> add_edge x y) fundef.fargs) fundef.fargs;
 	ret_nodes := S.empty;
@@ -441,7 +443,6 @@ let build (fund: Block.fundef) =
 						(S.empty, S.of_list (fund.args @ fund.fargs)) 
 					else
 						(fun (a, b) -> (S.of_list a, S.of_list b)) (Block.def_use (rm_some instr)) in
-
 				(if instr_id <> "" && is_move_instruction (rm_some instr) then (
 					let instr = rm_some instr in
 					live := S.diff !live us;
@@ -472,20 +473,24 @@ let make_worklist fund =
 
 
 
-let select_simplify_node () =
+let select_simplify_node fund =
+  let priority0 = S.empty (*S.inter (S.of_list (fund.args @ fund.fargs)) !simplify_worklist*) in
   let priority1 = S.inter !arg_nodes !simplify_worklist in
   let priority2 = S.inter !ret_nodes !simplify_worklist in
-  let priority3 = S.diff !simplify_worklist (S.union priority1 priority2) in
+  let priority3 = S.diff !simplify_worklist (S.union priority0 (S.union priority1 priority2)) in
   if S.is_empty priority3 then
     if S.is_empty priority2 then
-      if S.is_empty priority1 then assert false
+      if S.is_empty priority1 then
+        if S.is_empty priority0 then
+          assert false
+        else S.min_elt priority0
       else S.min_elt priority1
     else S.min_elt priority2
   else S.min_elt priority3
 
 
 let simplify fund =
-  let n = select_simplify_node () in
+  let n = select_simplify_node fund in
     (*  let n = S.min_elt !simplify_worklist in*)
   simplify_worklist := S.remove n !simplify_worklist;
   push n;
@@ -545,7 +550,8 @@ let set_not_together n li =
 
 let set_together n li =
   let a = try M.find n !together with Not_found -> [] in
-  no_together := M.add n (a @ li) !together  
+  together := M.add n (a @ li) !together  
+
   
 let set_color_env fund =
   no_together := M.empty;
@@ -554,12 +560,24 @@ let set_color_env fund =
          M.map( fun instr ->
                 match instr.instr with
                 | CallDir((dest, _), Id.L name, args, fargs) when Id.L name <> fund.name->
-                   let args_called = Asm.get_arg_regs name in                   
+                   let args_called = Asm.get_arg_regs name in
+                   Format.eprintf "%s :" name; Asm.print_regs args_called; Format.eprintf "\n";
+                   Asm.print_regs (args @ fargs); Format.eprintf "\n";
                    let uses = S.union (Asm.get_use_regs name) (S.of_list args_called) in
                    let uses_list = S.fold(fun a li -> a :: li) uses [] in
                    S.iter (fun n -> set_not_together n uses_list) (S.inter instr.liveIn instr.liveOut);
-                   List.iter2 (fun call called -> set_together call [called]) (args@fargs) args_called;
+                   List.iter2 (fun call called -> (set_together call [called]; set_not_together call (
+                                                                                   S.fold (fun x e -> x :: e) (S.remove called (S.of_list args_called)) []
+                     ) )) (args@fargs) args_called;
                    set_together dest [(Asm.get_ret_reg name)]
+(*                | CallDir(xt, Id.L name, args, fargs) ->
+                   List.iter2(
+                        fun x y ->
+                        set_together x [y]; set_together y [x];
+                        
+                   
+                     ) (args @ fargs) (fund.args @ fund.fargs)
+ *)
                 | _ -> ()
         )block.instrs
     )fund.blocks
@@ -568,22 +586,39 @@ let rec s_dif s li =
   match li with
   | [] -> s
   | l :: ls -> s_dif (S.remove l s) ls
-             
+
+let find_color remain =
+  (*  Format.eprintf "%d\n" (S.cardinal remain);*)
+  if (S.cardinal remain) > 0 then
+    let r  = ref remain in
+    let a = ref ((!cc) mod S.cardinal remain) in
+    (while !a > 0
+    do
+      r := S.remove (S.min_elt !r) !r;
+      a := !a - 1
+     done;
+     S.min_elt (!r)
+    )
+  else ""
+
+  
 let select_color fund n ok_colors =
   let ans = ref "" in
   (if M.mem n !together then
+     ((*Format.eprintf "find together %s \n" n; Asm.print_regs (M.find n !together); Format.eprintf "\n";*)
+      (if n = "num.6178.7794.13799" then let z = S.fold (fun x e -> x :: e) ok_colors [] in Asm.print_regs z else ());
      List.iter(
          fun a ->
          let a = if M.mem a !color then M.find a !color else a in
-         if S.mem a ok_colors then ans := a else ()
-       )(M.find n !together)
+         if S.mem a ok_colors then (ans := a; ( (*Format.eprintf "ok_colour %s\n" a*) ))else ()
+       )(M.find n !together))
   else if M.mem n !no_together then
     let no = M.find n !no_together in
     let no = List.map(fun a -> if M.mem a !color then M.find a !color else a)no in
     let remain = s_dif ok_colors no in
-    if not(S.is_empty remain ) then ans := (S.min_elt remain) else ()
+    if not(S.is_empty remain ) then ans := (find_color remain) else ()
    else ());
-  (if !ans = "" then ans := S.min_elt ok_colors else ());
+  (if !ans = "" then ans := (find_color ok_colors) else ());
   !ans
     
   
@@ -629,8 +664,9 @@ let rewrite_program fund =
         
 
 let rec main is_first (fund: Block.fundef) =
-  let Id.L (name) = fund.name in
+  let Id.L (name) = fund.name in  
   Format.eprintf "%s start@." name;
+  cc := !cc + 1;
   initialize is_first fund;
   set_color_env fund;
 	Live.analysis fund;

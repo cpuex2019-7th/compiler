@@ -139,7 +139,13 @@ let fundata = ref (M.add "min_caml_truncate" { arg_regs = ["%f1"]; ret_reg = "%x
 
 let fletd(x, e1, e2) = Let((x, Type.Float), e1, e2)
 let seq(e1, e2) = Let((Id.gentmp Type.Unit, Type.Unit), e1, e2)
-                    
+
+let rec print_regs li =
+  (*  S.iter (fun l -> Format.eprintf "%s, " l) li*)
+  match li with
+  | [] -> ()
+  | l :: ls -> (Format.eprintf "%s, " l; print_regs ls)
+                
 let get_arg_regs x = try (M.find x !fundata).arg_regs with Not_found -> Printf.eprintf "Not_found %s\n" x; assert false
 let get_ret_reg x = try (M.find x !fundata).ret_reg with Not_found -> Printf.eprintf "Not_found %s\n" x; assert false
 let get_use_regs x = 
