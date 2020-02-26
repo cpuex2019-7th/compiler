@@ -7,12 +7,14 @@ let rec iter n e = (* 最適化処理をくりかえす (caml2html: main_iter) *
   if n = 0 then Elim.f (Cse.f (ConstFold.f(Assoc.f (Beta.f  (Zero.f  (Closure_elim.f e)))) )) else
     let e' = Elim.f (*eliminate unecessary definition*)
                ( Cse.f
+                                      ( ConcatConst.f
                    (ConstFold.f (*constant folding*)
                       ( IfElim.f 
-                  (Inline.f (*inline expansion*)
+                          (Inline.f (*inline expansion*)
+                             (ConstArg.f
                      (Assoc.f (*let reduction*)
-                        (Beta.f e)))))) in (*beta reduction*)
-    if e = e' then Elim.f (Cse.f (ConstFold.f(Assoc.f (Beta.f (Zero.f (Closure_elim.f e))))) ) else
+                        (Beta.f e)))))))  )  in (*beta reduction*)
+    if e = e' then Elim.f (Cse.f (ConcatConst.f(ConstFold.f(Assoc.f (Beta.f (Zero.f (Closure_elim.f e)))))) ) else
   iter (n - 1) e'
 
 let lexbuf outchan l glb_l= (* バッファをコンパイルしてチャンネルへ出力する (caml2html: main_lexbuf) *)

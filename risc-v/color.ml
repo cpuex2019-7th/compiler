@@ -535,8 +535,8 @@ let freeze fundef =
 
 
 let select_spill fundef =
-  let m = (if !spill_cnt mod 2 = 1 then S.min_elt !spill_worklist
-           else  select_spill_node fundef) in
+  let m = (if !spill_cnt mod 2 = 0 then S.min_elt !spill_worklist
+           else  (* select_spill_node fundef*) S.min_elt !spill_worklist   ) in
     spill_worklist := S.remove m !spill_worklist;
   simplify_worklist := S.add m !simplify_worklist;
   freeze_moves m
@@ -561,8 +561,8 @@ let set_color_env fund =
                 match instr.instr with
                 | CallDir((dest, _), Id.L name, args, fargs) when Id.L name <> fund.name->
                    let args_called = Asm.get_arg_regs name in
-                   Format.eprintf "%s :" name; Asm.print_regs args_called; Format.eprintf "\n";
-                   Asm.print_regs (args @ fargs); Format.eprintf "\n";
+                   (*Format.eprintf "%s :" name; Asm.print_regs args_called; Format.eprintf "\n";
+                   Asm.print_regs (args @ fargs); Format.eprintf "\n"; *)
                    let uses = S.union (Asm.get_use_regs name) (S.of_list args_called) in
                    let uses_list = S.fold(fun a li -> a :: li) uses [] in
                    S.iter (fun n -> set_not_together n uses_list) (S.inter instr.liveIn instr.liveOut);
@@ -570,17 +570,28 @@ let set_color_env fund =
                                                                                    S.fold (fun x e -> x :: e) (S.remove called (S.of_list args_called)) []
                      ) )) (args@fargs) args_called;
                    set_together dest [(Asm.get_ret_reg name)]
-(*                | CallDir(xt, Id.L name, args, fargs) ->
+                | CallDir(xt, Id.L name, args, fargs) ->
                    List.iter2(
                         fun x y ->
-                        set_together x [y]; set_together y [x];
-                        
-                   
-                     ) (args @ fargs) (fund.args @ fund.fargs)
- *)
+                        (set_together x [y]; set_together y [x];
+                        List.iter (fun a -> if a <> y then (set_not_together x [a]; set_not_together a [x]) else ()
+                          )(if List.mem x args then fund.args else fund.fargs))
+                     ) (args @ fargs) (fund.args @ fund.fargs);
+                   set_together (fst xt) [(Asm.get_ret_reg name)]
+                | Neg((d, _), u) | FNegD((d, _), u) ->
+                   set_together d [u]; set_together u [d]
+                | _ when instr.nextId = "" ->
+                   let def, use = Block.def_use instr in
+                   List.iter (
+                       fun d ->
+                       List.iter (
+                           fun u -> set_together d [u]; set_together u [d]
+                         ) use
+                     ) def
                 | _ -> ()
         )block.instrs
     )fund.blocks
+
   
 let rec s_dif s li =
   match li with
@@ -663,10 +674,12 @@ let rewrite_program fund =
 	spill_cnt := 1 + !spill_cnt
         
 
+
+
 let rec main is_first (fund: Block.fundef) =
   let Id.L (name) = fund.name in  
   Format.eprintf "%s start@." name;
-  cc := !cc + 1;
+  cc := !cc + 2;
   initialize is_first fund;
   set_color_env fund;
 	Live.analysis fund;
