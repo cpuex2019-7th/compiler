@@ -85,7 +85,7 @@ and g'_if dest cont regenv exp constr e1 e2 = (* ifのレジスタ割り当て (
 			with Not_found -> regenv')
 			M.empty
 			(fv cont) in
-        let regenv' = M.add Id.izero reg_z (M.add Id.fzero reg_fz regenv') in
+        let regenv' = M.add Id.fone reg_fone (M.add Id.izero reg_z (M.add Id.fzero reg_fz regenv')) in
 	(List.fold_left
 		(fun e x ->
 			if x = fst dest || not (M.mem x regenv) || M.mem x regenv' then e else
@@ -110,7 +110,7 @@ and g'_call id dest cont regenv exp constr ys zs = (* 関数呼び出しのレ�
 		(Ans (constr
 				(List.map (fun y -> find y Type.Int regenv) ys)
 				(List.map (fun z -> find z Type.Float regenv) zs)),
-                 M.add Id.izero reg_z (M.add Id.fzero reg_z M.empty))
+                 M.add Id.fone reg_fone(M.add Id.izero reg_z (M.add Id.fzero reg_z M.empty)))
 		(fv cont)
 	)
 
@@ -141,7 +141,7 @@ let h { name = Id.L(x); args = ys; fargs = zs; body = e; ret = t } = (* 関数�
 			assert false in
 	current_pos := x;
 
-	let regenv = M.add Id.fzero reg_fz (M.add Id.izero reg_z (M.add x reg_cl M.empty)) in
+	let regenv = M.add Id.fone reg_fone (M.add Id.fzero reg_fz (M.add Id.izero reg_z (M.add x reg_cl M.empty))) in
 	let regenv = List.fold_left2
 				(fun env x r -> M.add x r env
 				) regenv (ys @ zs) data.arg_regs in
@@ -153,7 +153,7 @@ let h { name = Id.L(x); args = ys; fargs = zs; body = e; ret = t } = (* 関数�
 	let env = S.union (S.of_list data.arg_regs) (S.add data.ret_reg (get_use_regs x e')) in
 	let env = S.filter is_reg env in
 	let env = S.union (S.of_list [reg_sw; reg_fsw]) env in
-        let env = S.remove reg_z (S.remove reg_fz env) in
+        let env = S.remove reg_fone (S.remove reg_z (S.remove reg_fz env)) in
 	let data = { data with use_regs = env} in
 	fundata := M.add x data !fundata;
 
@@ -174,7 +174,7 @@ let f (Block.Prog(data, fundefs, main_fun)) = (* プログラム全体のレジ�
 		  ) fundefs in
 	Color.main true main_fun;
 	let e = (Block_to_asm.h main_fun).body in
-	let e', regenv' = g (Id.gentmp Type.Unit, Type.Unit) (Ans(Nop)) (M.add Id.izero reg_z (M.add Id.fzero reg_fz M.empty)) e in
+	let e', regenv' = g (Id.gentmp Type.Unit, Type.Unit) (Ans(Nop)) (M.add Id.fone reg_fone (M.add Id.izero reg_z (M.add Id.fzero reg_fz M.empty))) e in
 
 	let ans = Prog (data, fundefs', e') in
 	ans

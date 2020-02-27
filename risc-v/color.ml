@@ -44,7 +44,7 @@ let is_loop = ref false
 let rec  erase_zero ls = 
   match ls with
   | [] -> []
-  | (a, b) :: li -> if a = Id.izero || a = Id.fzero then erase_zero li else (a, b) :: (erase_zero li)
+  | (a, b) :: li -> if a = Id.izero || a = Id.fzero || a = Id.fone then erase_zero li else (a, b) :: (erase_zero li)
 let get_tp instr =
   match instr.instr with
       | Hpsave(xt)
@@ -159,10 +159,10 @@ let set_all_moves fund =
 		fun _ instr -> 
 		match instr.instr with
 		| Mov (dest, src)  ->
-                                      if fst(dest) <> Id.izero && fst(dest) <> Id.fzero && src <> Id.izero && src <> Id.fzero then
+                   if fst(dest) <> Id.izero && fst(dest) <> Id.fzero && src <> Id.izero && src <> Id.fzero && fst(dest) <> Id.fone && src <> Id.fone then
 		   all_moves := M.add instr.id (blk.id, instr.id, dest, src) !all_moves else ()
 		| FMovD (dest, src)->
-                if fst(dest) <> Id.izero && fst(dest) <> Id.fzero && src <> Id.izero && src <> Id.fzero then
+                if fst(dest) <> Id.izero && fst(dest) <> Id.fzero && src <> Id.izero && src <> Id.fzero && fst(dest) <> Id.fone && src <> Id.fone then
 		   all_moves := M.add instr.id (blk.id, instr.id, dest, src) !all_moves else ()
 		| _ -> ()
 	      ) blk.instrs
@@ -406,7 +406,7 @@ let initialize is_first fundef =
 	adj_list := M.fold (fun x _ env -> M.add x S.empty env) !varenv M.empty;
 	degree := M.fold (fun x _ env -> M.add x 0 env) !varenv M.empty;
 	color := S.fold (fun x env -> M.add x x env) !precolored M.empty;
-        color := M.add Id.izero Asm.reg_z (M.add Id.fzero Asm.reg_fz !color);
+        color := M.add Id.fone Asm.reg_fone (M.add Id.izero Asm.reg_z (M.add Id.fzero Asm.reg_fz !color));
         
 	List.iter (fun x -> List.iter (fun y -> add_edge x y) fundef.args) fundef.args;
 	List.iter (fun x -> List.iter (fun y -> add_edge x y) fundef.fargs) fundef.fargs;
@@ -428,7 +428,7 @@ let initialize is_first fundef =
 let is_move_instruction instr = 
 	match instr.instr with
 		| Mov ((x, _), y) -> if x = Id.izero || y = Id.izero then false else true
-		| FMovD ((x, _), y) -> if x = Id.fzero || y = Id.fzero then false else true
+		| FMovD ((x, _), y) -> if x = Id.fzero || y = Id.fzero || x = Id.fone || y = Id.fone then false else true
 		| _ -> false
 
 let build (fund: Block.fundef) =

@@ -90,7 +90,7 @@ type prog = Prog of (Id.l * float) list * fundef list * fundef
 let rec erase_zero li = 
   match li with
   | [] -> []
-  | l :: ls -> if l = Id.izero || l = Id.fzero then erase_zero ls else l :: (erase_zero ls)
+  | l :: ls -> if l = Id.izero || l = Id.fzero || l = Id.fone then erase_zero ls else l :: (erase_zero ls)
 
 (*todo:ここからzeroレジスタのidを消す*)
 let def_use instr = 

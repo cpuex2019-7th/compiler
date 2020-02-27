@@ -184,7 +184,7 @@ and g' oc = function (* 各命令のアセンブリ生成 (caml2html: emit_gprim
                              add (Out.Sw(x, (rename_reg reg_sp), (string_of_int (offset y))))
   (*      Printf.fprintf oc "\tst\t%s, [%s + %d]\n" x reg_sp (offset y) *)
   | NonTail(_), Save(x, y) when List.mem x allfregs && not (S.mem (rename_reg y) !stackset) ->
-     if y = Id.fzero then assert false else ();     
+     if y = Id.fzero || y = Id.fone then assert false else ();     
      let x = rename_reg x in let y = rename_reg y in
                              save y;
                              add (Out.Fsw(x, (rename_reg reg_sp), (string_of_int (offset y))))
@@ -499,6 +499,8 @@ let f aaflag oc (Prog(data, fundefs, e)) =
   stackmap := [];
   add (Out.FLAG("min_caml_start"));
   add (Out.Fmvwx("f0", "x0"));
+  add (Out.Li("x5", "1065353216"));
+  add (Out.Fmvwx ("f1", "x5"));
   add (Out.Li("x2", "1300000"));
   add (Out.Li("x3", "0"));
   (if aaflag = 0 then

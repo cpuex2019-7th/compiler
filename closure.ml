@@ -61,7 +61,7 @@ let rec fv_sub = function
   | Put(x, y, z) -> S.of_list [x; y; z]
 let rec fv exp =
   let a = fv_sub exp in
-  S.remove Id.izero (S.remove Id.fzero a)
+  S.remove Id.fone (S.remove Id.izero (S.remove Id.fzero a))
                   
 let toplevel : fundef list ref = ref []
 
@@ -140,3 +140,4 @@ let f e =
   toplevel := [];
   let e' = g  M.empty S.empty e  in(*g (M.add Id.izero Type.Int (M.add Id.fzero Type.Float M.empty)) S.empty e in*)
   Prog(List.rev !toplevel, e')
+

@@ -2,6 +2,7 @@ type t = string (* 変数の名前 (caml2html: id_t) *)
 type l = L of string (* トップレベル関数やグローバル配列のラベル (caml2html: id_l) *)
 let izero = "zero"
 let fzero = "fzero"
+let fone = "fone"          
 
 let get_name (L x) = x          
 

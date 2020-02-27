@@ -44,6 +44,8 @@ let rec g env = function (* 式の仮想マシンコード生成 (caml2html: vir
      let fl = getfl d in
      if fl = Int32.zero then
        Ans(FMovD (Id.fzero))
+     else if fl = Int32.one || (Int32.to_string(fl)) = "1065353216" then
+       Ans(FMovD (Id.fone))
      else       
      let f = Id.L(Int32.to_string(fl)) in (*todo: 16進数表記*)
      Let((i, Type.Int), SetLi(f), Ans(Fmv(i)))
@@ -218,7 +220,7 @@ let h { Closure.name = (Id.L(x), t); Closure.args = yts; Closure.formal_fv = zts
   let (offset, load) =
     expand
       zts
-       (4, g (M.add Id.izero Type.Int (M.add Id.fzero Type.Float (M.add x t (M.add_list yts (M.add_list zts M.empty))))) e)
+       (4, g (M.add Id.fone Type.Float (M.add Id.izero Type.Int (M.add Id.fzero Type.Float (M.add x t (M.add_list yts (M.add_list zts M.empty)))))) e)
       (*       (4, g (M.add x t (M.add_list yts (M.add_list zts M.empty))) e)*)
       (fun z offset load -> fletd(z, LdDF(x, C(offset)), load))
       (fun z t offset load -> Let((z, t), Ld(x, C(offset)), load)) in
@@ -246,7 +248,7 @@ let f (Closure.Prog(fundefs, e)) =
   data := [];
   let fundefs = List.map h fundefs in
   (*  let e = g M.empty e in*)
-  let e = g (M.add Id.izero Type.Int ( M.add Id.fzero Type.Float M.empty)) e in
+  let e = g (M.add Id.fone Type.Float (M.add Id.izero Type.Int ( M.add Id.fzero Type.Float M.empty))) e in
   Prog(!data, fundefs, e)
 
 

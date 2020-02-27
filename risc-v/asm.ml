@@ -66,13 +66,14 @@ let regs = (* Array.init 16 (fun i -> Printf.sprintf "%%r%d" i) *)
      "%x4"; "%x11"; "%x12"; "%x13"; "%x14"; "%x15"; "%x16"; "%x17";
      "%x18"; "%x19"; "%x20"; "%x21"; "%x22"; "%x23"; "%x24"; "%x25"; "%x26"; "%x27";
      "%x28"; "%x29"; "%x30"; "%x31" |]
-let fregs = Array.init 31 (fun i -> Printf.sprintf "%%f%d" (i+1))
+let fregs = Array.init 30 (fun i -> Printf.sprintf "%%f%d" (i+2))
 let allregs = Array.to_list regs
 let allfregs = Array.to_list fregs
 let reg_cl = regs.(Array.length regs - 1) (* closure address (caml2html: sparcasm_regcl) *)
 let reg_sw = regs.(Array.length regs - 2) (* temporary for swap *)
 let reg_fsw = fregs.(Array.length fregs - 1) (* temporary for swap *)
 let reg_z = "%x0"            (*zero register*)
+let reg_fone = "%f1"
 let reg_sp = "%x2" (* stack pointer *)
 let reg_hp = "%x3" (* heap pointer (caml2html: sparcasm_reghp) *)
 let reg_ra = "%x1" (* return address *)
@@ -106,7 +107,7 @@ let rec remove_and_uniq xs = function
 
 (* free variables in the order of use (for spilling) (caml2html: sparcasm_fv) *)
 let fv_id_or_imm = function V(x) -> [x] | _ -> []
-let is_id_zero x = if x = Id.izero || x = Id.fzero then true else false
+let is_id_zero x = if x = Id.izero || x = Id.fzero || x = Id.fone then true else false
 let rec fv_exp = function
   | Nop | Set(_) | SetL(_) | SetLi(_) | Comment(_) | Restore(_) | Hpsave -> []
   | Fmv(x) | Mov(x) | Neg(x) | FMovD(x) | FNegD(x) | Save(x, _)  | Fabs(x) | Fsqrt(x) | Fcvtsw(x) | Fcvtws(x)-> [x]
@@ -123,7 +124,7 @@ and fv = function
   | Ans(exp) -> fv_exp exp
   | Let((x, t), exp, e) ->
       fv_exp exp @ remove_and_uniq (S.singleton x) (fv e)
-let fv e = let a = remove_and_uniq (S.add Id.fzero( S.add Id.izero S.empty)) (fv e) in if List.mem Id.izero a || List.mem Id.fzero a then assert false else a
+let fv e = let a = remove_and_uniq (S.add Id.fone (S.add Id.fzero( S.add Id.izero S.empty))) (fv e) in if List.mem Id.izero a || List.mem Id.fzero a || List.mem Id.fone a then assert false else a
 
 let rec concat e1 xt e2 =
   match e1 with
@@ -135,7 +136,7 @@ let align i = (if i mod 8 = 0 then i else i + 4)
 
 type fundata = {arg_regs : Id.t list; ret_reg : Id.t; use_regs : S.t}
 
-let fundata = ref (M.add "min_caml_truncate" { arg_regs = ["%f1"]; ret_reg = "%x10"; use_regs = S.of_list ["%x10"; "%f1"; "%f2"]} M.empty)
+let fundata = ref (M.add "min_caml_truncate" { arg_regs = ["%f2"]; ret_reg = "%x10"; use_regs = S.of_list ["%x10"; "%f2"; "%f3"]} M.empty)
 
 let fletd(x, e1, e2) = Let((x, Type.Float), e1, e2)
 let seq(e1, e2) = Let((Id.gentmp Type.Unit, Type.Unit), e1, e2)

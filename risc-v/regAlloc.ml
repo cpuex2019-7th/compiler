@@ -234,6 +234,6 @@ let h { name = Id.L(x); args = ys; fargs = zs; body = e; ret = t } = (* 関数�
 let f (Prog(data, fundefs, e)) = (* プログラム全体のレジスタ割り当て (caml2html: regalloc_f) *)
   Format.eprintf "register allocation: may take some time (up to a few minutes, depending on the size of functions)@.";
   let fundefs' = List.map h fundefs in
-  let e', regenv' = g (Id.gentmp Type.Unit, Type.Unit) (Ans(Nop)) (M.add Id.izero reg_z (M.add Id.fzero reg_fz M.empty)) e in
+  let e', regenv' = g (Id.gentmp Type.Unit, Type.Unit) (Ans(Nop)) (M.add Id.fone reg_fone (M.add Id.izero reg_z (M.add Id.fzero reg_fz M.empty))) e in
   Prog(data, fundefs', e')
 
