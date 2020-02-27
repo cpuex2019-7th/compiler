@@ -521,8 +521,9 @@ let f aaflag oc (Prog(data, fundefs, e)) =
   g oc (NonTail("x0"), e);
   (*  Printf.fprintf oc "\tadd\tx10, x4, x0 ; set output to a0 register\n"; (*デバッグ結果をx10に出力する*)*)
   add (Out.Jalr("x0", "x1", "0"));
-  List.iter (fun fundef -> h oc fundef) fundefs;
-  Out.f oc (!program)
+  Out.f oc (!program) (Id.L "min_caml_start");
+  List.iter (fun fundef -> (program := []; h oc fundef; Out.f oc (!program) fundef.name)) fundefs
+
     
 (*  Printf.fprintf oc ".global\tmin_caml_start\n";
   Printf.fprintf oc "min_caml_start:\n"; *)

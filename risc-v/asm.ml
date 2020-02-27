@@ -146,7 +146,7 @@ let rec print_regs li =
   | [] -> ()
   | l :: ls -> (Format.eprintf "%s, " l; print_regs ls)
                 
-let get_arg_regs x = try (M.find x !fundata).arg_regs with Not_found -> Printf.eprintf "Not_found %s\n" x; assert false
-let get_ret_reg x = try (M.find x !fundata).ret_reg with Not_found -> Printf.eprintf "Not_found %s\n" x; assert false
+let get_arg_regs x = (M.find x !fundata).arg_regs (*with Not_found -> Printf.eprintf "Not_found %s\n" x; assert false*)
+let get_ret_reg x =  (M.find x !fundata).ret_reg (*with Not_found -> Printf.eprintf "Not_found %s\n" x; assert false*)
 let get_use_regs x = 
-	try (M.find x !fundata).use_regs with Not_found -> Printf.printf "\tNotFound %s\n" x; S.of_list (allregs @ allfregs)
+  (M.find x !fundata).use_regs (*with Not_found -> Printf.printf "\tNotFound %s\n" x; S.of_list (allregs @ allfregs)*)

@@ -38,8 +38,227 @@ type t =
   | Bge of string * string * string 
   | Blt of string * string * string 
 
+type judge =
+  | Unable
+  | Able of int * t
+
+let get_use_reg e =
+  match e with
+  | EOF -> []
+  | Arg(x, y)  
+  | Farg(x, y) -> [y]
+  | FLAG(x) -> [x]
+  | Addi(x, y, z) -> [y;z]
+  | Li(x, y) 
+  | Lilo(x, y) 
+  | Fmvwx(x, y) -> [y]
+  | Add(x, y, z) 
+  | Sub(x, y, z) 
+  | Mul(x, y, z)  
+  | Div(x, y, z)  
+  | Slli(x, y, z) 
+  | Srai(x, y, z) 
+  | Lw(x, y, z) -> [y;z]
+  | Sw(x, y, z) -> [x;y;z]
+  | Fadd(x, y, z)  
+  | Fsub(x, y, z)  
+  | Fmul(x, y, z)  
+  | Fdiv(x, y, z) -> [y;z]
+  | Feq(x, y, z)  
+  | Fle(x, y, z)  
+  | Flw(x, y, z)  
+  | Fsw(x, y, z)  
+  | Beq(x, y, z) -> [x;y;z]
+  | Jal(x, y) -> [x;y]
+  | Lbu(x, y, z) 
+  | Andi(x, y, z)  
+  | Sb(x, y, z) -> [x;y;z]
+  | Bne(x, y, z) -> [x;y;z]
+  | Or(x, y, z) -> [x;y;z]
+  | Fsgnjx(x, y, z) -> [y;z]
+  | Fsqrt(x, y)  
+  | Fcvtsw(x, y)  
+  | Fcvtws(x, y) ->[y]
+  | Jalr(x, y, z) -> [x;y;z]
+  | Bge(x, y, z)  
+    | Blt(x, y, z) -> [x;y;z]
+
+let get_def_reg e =
+  match e with
+  | EOF -> []
+  | Arg(x, y)  
+  | Farg(x, y) -> []
+  | FLAG(x) -> []
+  | Addi(x, y, z) -> [x]
+  | Li(x, y) 
+  | Lilo(x, y) 
+  | Fmvwx(x, y) -> [x]
+  | Add(x, y, z) 
+  | Sub(x, y, z) 
+  | Mul(x, y, z)  
+  | Div(x, y, z)  
+  | Slli(x, y, z) 
+  | Srai(x, y, z) 
+  | Lw(x, y, z) -> [x]
+  | Sw(x, y, z) -> []
+  | Fadd(x, y, z)  
+  | Fsub(x, y, z)  
+  | Fmul(x, y, z)  
+  | Fdiv(x, y, z) -> [x]
+  | Feq(x, y, z)  -> []
+  | Fle(x, y, z)  -> []
+  | Flw(x, y, z)  -> [x]
+  | Fsw(x, y, z)  
+  | Beq(x, y, z) -> []
+  | Jal(x, y) -> []
+  | Lbu(x, y, z) 
+  | Andi(x, y, z)  
+  | Sb(x, y, z) -> []
+  | Bne(x, y, z) -> []
+  | Or(x, y, z) -> []
+  | Fsgnjx(x, y, z) -> [x]
+  | Fsqrt(x, y)  
+  | Fcvtsw(x, y)  
+  | Fcvtws(x, y) ->[x]
+  | Jalr(x, y, z) -> []
+  | Bge(x, y, z)  
+  | Blt(x, y, z) -> [] 
 
 
+let is_used x e =
+  let used_reg = get_use_reg e in
+  List.mem x used_reg
+
+let is_def x e =
+  let def_reg = get_def_reg e in
+  List.mem x def_reg
+          
+let rec effect e =
+  match e with
+  | Beq(_, _, _) | Bne(_, _, _) | Bge(_,_ ,_ ) | Blt(_, _, _) | Jal(_, _) | Jalr(_, _, _) | FLAG(_) | Lbu(_)
+    | Sb(_)
+      | Andi(_)  -> true
+  | _ -> false
+
+
+
+let rec get_new_e target source = function
+  | EOF -> EOF
+  | Arg(x, y) when x = source -> Arg(target, y)
+  | Farg(x, y) when x = source -> Farg(target, y)
+  | Addi(x, y, z) when x = source -> Addi(target, y, z)
+  | Li(x, y) when x = source -> Li(target, y)
+  | Lilo(x, y) when x = source -> Lilo(target, y)
+  | Fmvwx(x, y) when x = source -> Fmvwx(target, y)
+  | Add(x, y, z) when x = source -> Add(target, y, z)
+  | Sub(x, y, z) when x = source -> Sub(target, y, z)
+  | Mul(x, y, z) when x = source -> Mul(target, y, z)
+  | Div(x, y, z)  when x = source -> Div(target, y, z)
+  | Slli(x, y, z) when x = source -> Slli(target, y, z)
+  | Srai(x, y, z) when x = source -> Srai(target, y, z)
+  | Lw(x, y, z) when x = source -> Lw(target, y, z)
+  | Fadd(x, y, z)  when x = source -> Fadd(target, y, z)
+  | Fsub(x, y, z)  when x = source -> Fsub(target, y, z)
+  | Fmul(x, y, z)  when x = source -> Fmul(target, y, z)
+  | Fdiv(x, y, z) when x = source -> Fdiv(target, y, z)
+  | Flw(x, y, z)  when x = source -> Flw(target, y, z)
+  | Lbu(x, y, z)  when x = source -> Lbu(target, y, z)
+  | Andi(x, y, z)   when x = source -> Andi(target, y, z)
+  | Sb(x, y, z)  when x = source -> Sb(target, y, z)
+  | Or(x, y, z)  when x = source -> Or(target, y, z)
+  | Fsgnjx(x, y, z)  when x = source -> Fsgnjx(target, y, z)
+  | Fsqrt(x, y)   when x = source -> Fsqrt(target, y)
+  | Fcvtsw(x, y)   when x = source -> Fcvtsw(target, y)
+  | Fcvtws(x, y)  when x = source -> Fcvtws(target, y)
+  | _ -> assert false
+    
+let rec not_use_rest source full_program =
+  match full_program with
+  | [] -> true
+  | y :: ys ->
+     match y with
+     | Jal(_, name) -> if (try (List.mem source (Asm.get_arg_regs name)) with Not_found -> Format.eprintf "not found %s@." name; true)
+                       then false
+                       else  if S.mem source (Asm.get_use_regs name) then true else not_use_rest source ys
+     | _ ->
+        if effect y then false
+        else
+          if is_used source y then false
+                                     (*          else if is_def source y then true*)
+          else not_use_rest source ys
+
+let rec rewrite_arg_sub full_program target source arg_position i e current_program current_position =
+  match full_program with
+  | [] -> assert false
+  | y :: ys ->
+     if current_position = arg_position then if (y <> Arg(target, source) && y <> Farg(target, source)) then
+                                               (Format.eprintf "error %s, %s@." target source; assert false)
+                                             else
+                                            (Format.eprintf "rewrite finish@."; (current_program @ [EOF] @ ys))
+     else if current_position = i
+     then
+       if y = e then
+       let new_e = get_new_e target source e in
+       rewrite_arg_sub ys target source arg_position i e (current_program @ [new_e]) (current_position + 1)
+       else assert false
+     else
+       rewrite_arg_sub ys target source arg_position i e (current_program @ [y]) (current_position + 1)
+
+       
+
+let rec rewrite_arg full_program target source arg_position ability =
+  match ability with
+  | Unable -> assert false
+  | Able(i, e) ->
+     rewrite_arg_sub full_program target source arg_position i e [] 0
+
+    
+       
+
+let rec change_arg target source arg_position full_program original_program ability current_position =
+  if current_position = arg_position then
+    if ability <> Unable  && (not_use_rest source (List.tl full_program))
+    then rewrite_arg original_program target source arg_position ability
+    else original_program
+  else    
+    match full_program with
+    | [] -> (Format.eprintf "error %d %d@." current_position arg_position ;assert false)
+    | y :: remain ->
+       if effect y then change_arg target source arg_position remain original_program Unable (current_position + 1)
+       else         
+         if is_def source y
+         then
+           change_arg target source arg_position remain original_program (Able(current_position, y)) (current_position + 1)       
+         else
+           if (is_used target y || is_def target y)
+           then
+             change_arg target source arg_position remain original_program Unable (current_position + 1)
+           else
+             change_arg target source arg_position remain original_program ability (current_position + 1)
+             
+
+
+                       
+
+         
+
+let rec elim_arg original_program full_program current_position name =
+  match original_program with
+  | [] -> full_program
+  | y :: remain ->
+     match y with
+     | Arg(x, y)| Farg(x, y) -> let le = List.length full_program in
+(*                                Format.eprintf "arg found@.";
+                                Format.eprintf "%s@." name;
+                                Format.eprintf "length %d@." (List.length full_program);*)
+                                let full_program = change_arg x y current_position full_program full_program Unable 0 in
+                                if (List.length full_program) <> le then assert false else
+                                elim_arg remain full_program (current_position + 1) name 
+     | e -> elim_arg remain full_program (current_position + 1) name
+                  
+
+
+         
 
 let rec g oc program =
   match program with
@@ -47,8 +266,10 @@ let rec g oc program =
   | y :: remain ->
      match y with
      | EOF -> g oc remain
-     | Arg(x, y) -> Printf.fprintf oc "\tadd\t%s, %s, x0\n" x y; g oc remain
-     | Farg(x, y) -> Printf.fprintf oc "\tfadd\t%s, %s, x0\n" x y; g oc remain
+     | Add(x, y, z) when x = y && z = "x0" -> g oc remain
+     | Sub(x, y, z) when x = y && z = "x0" -> g oc remain
+     | Arg(x, y) -> Printf.fprintf oc "\tadd\t%s, %s, x0 ; args\n" x y; g oc remain
+     | Farg(x, y) -> Printf.fprintf oc "\tfadd\t%s, %s, x0 ; args\n" x y; g oc remain
      | FLAG(x) -> Printf.fprintf oc "%s:\n" x; g oc remain
      | Addi(x, y, z) -> Printf.fprintf oc "\taddi\t%s, %s, %s\n" x y z; g oc remain
      | Li(x, y) -> Printf.fprintf oc "\tli\t%s, %s\n" x y; g oc remain
@@ -90,4 +311,8 @@ let rec g oc program =
 
 
 
-let f = g                               
+let f oc e (Id.L name) =
+  let e = elim_arg e e 0 name in
+  let e = elim_arg e e 0 name in
+  let e = elim_arg e e 0 name in
+  g oc e; Format.eprintf "finish generating %s@." name

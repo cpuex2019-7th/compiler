@@ -536,7 +536,7 @@ let freeze fundef =
 
 let select_spill fundef =
   let m = (if !spill_cnt mod 2 = 0 then S.min_elt !spill_worklist
-           else  (* select_spill_node fundef*) S.min_elt !spill_worklist   ) in
+           else   select_spill_node fundef ) in
     spill_worklist := S.remove m !spill_worklist;
   simplify_worklist := S.add m !simplify_worklist;
   freeze_moves m
