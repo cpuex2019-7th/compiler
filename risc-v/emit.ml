@@ -367,7 +367,7 @@ add (Out.Lw(x, (rename_reg reg_sp), (string_of_int (offset y))))
       add (Out.Lw((rename_reg reg_sw), (rename_reg reg_cl), "0"));
       add (Out.Addi((rename_reg reg_sp), (rename_reg reg_sp), (string_of_int ss)));
       add (Out.Jalr((rename_reg reg_ra), (rename_reg reg_sw), "0"));
-      add (Out.Addi((rename_reg reg_sp), (rename_reg reg_sp), (string_of_int ss)));
+      add (Out.Addi((rename_reg reg_sp), (rename_reg reg_sp), (string_of_int (-1 * ss))));
       add (Out.Lw((rename_reg reg_ra), (rename_reg reg_sp), (string_of_int (ss - 4))));
 (*      Printf.fprintf oc "\tcall\t%s\n" reg_sw;
       Printf.fprintf oc "\tadd\t%s, %d, %s\t! delay slot\n" reg_sp ss reg_sp;
@@ -385,7 +385,7 @@ add (Out.Lw(x, (rename_reg reg_sp), (string_of_int (offset y))))
       add (Out.Sw((rename_reg reg_ra), (rename_reg reg_sp), (string_of_int (ss - 4))));
       add (Out.Addi((rename_reg reg_sp), (rename_reg reg_sp), (string_of_int ss)));
       add (Out.Jal((rename_reg reg_ra), (rename_reg x)));
-      add (Out.Addi((rename_reg reg_sp), (rename_reg reg_sp), (string_of_int ss)));
+      add (Out.Addi((rename_reg reg_sp), (rename_reg reg_sp), (string_of_int (-1 * ss))));
       add (Out.Lw((rename_reg reg_ra), (rename_reg reg_sp), (string_of_int (ss - 4))));
 (*      
       Printf.fprintf oc "\tst\t%s, [%s + %d]\n" reg_ra reg_sp (ss - 4);

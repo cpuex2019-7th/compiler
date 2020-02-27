@@ -52,7 +52,7 @@ let rec g oc program =
      | FLAG(x) -> Printf.fprintf oc "%s:\n" x; g oc remain
      | Addi(x, y, z) -> Printf.fprintf oc "\taddi\t%s, %s, %s\n" x y z; g oc remain
      | Li(x, y) -> Printf.fprintf oc "\tli\t%s, %s\n" x y; g oc remain
-     | Lilo(x, y) -> Printf.fprintf oc "\tli\t%s %%lo(%s)\n" x y; g oc remain
+     | Lilo(x, y) -> Printf.fprintf oc "\tli\t%s, %%lo(%s)\n" x y; g oc remain
      | Fmvwx(x, y) -> Printf.fprintf oc "\tfmvwx\t%s, %s\n" x y; g oc remain
      | Add(x, y, z) -> Printf.fprintf oc "\tadd\t%s, %s, %s\n" x y z; g oc remain
      | Sub(x, y, z) -> Printf.fprintf oc "\tsub\t%s, %s, %s\n" x y z; g oc remain
