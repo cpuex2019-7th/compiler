@@ -25,7 +25,7 @@ alpha.mli alpha.ml beta.mli beta.ml assoc.mli assoc.ml \
 inline.mli inline.ml constFold.mli constFold.ml closure_elim.mli closure_elim.ml cse.mli cse.ml elim.mli elim.ml \
 zero.mli zero.ml ifElim.mli ifElim.ml constArg.mli constArg.ml concatConst.mli concatConst.ml\
 closure.mli closure.ml asm.mli asm.ml virtual.mli virtual.ml \
-simm.mli simm.ml regAlloc.mli regAlloc.ml block.ml live.ml color.ml block_to_asm.ml regAllocColor.ml emit.mli emit.ml \
+simm.mli simm.ml regAlloc.mli regAlloc.ml block.ml live.ml color.ml block_to_asm.ml regAllocColor.ml out.ml emit.mli emit.ml \
 joinglb.ml joinglb.mli \
 main.mli main.ml 
 
