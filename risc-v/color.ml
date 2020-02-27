@@ -474,7 +474,7 @@ let make_worklist fund =
 
 
 let select_simplify_node fund =
-  let priority0 = S.empty (*S.inter (S.of_list (fund.args @ fund.fargs)) !simplify_worklist*) in
+  let priority0 = (*S.empty*) S.inter (S.of_list (fund.args @ fund.fargs)) !simplify_worklist in
   let priority1 = S.inter !arg_nodes !simplify_worklist in
   let priority2 = S.inter !ret_nodes !simplify_worklist in
   let priority3 = S.diff !simplify_worklist (S.union priority0 (S.union priority1 priority2)) in
@@ -618,7 +618,7 @@ let select_color fund n ok_colors =
   (if M.mem n !together then
      ((*Format.eprintf "find together %s \n" n; Asm.print_regs (M.find n !together); Format.eprintf "\n";*)
       (if n = "num.6178.7794.13799" then let z = S.fold (fun x e -> x :: e) ok_colors [] in Asm.print_regs z else ());
-     List.iter(
+      List.iter(
          fun a ->
          let a = if M.mem a !color then M.find a !color else a in
          if S.mem a ok_colors then (ans := a; ( (*Format.eprintf "ok_colour %s\n" a*) ))else ()
@@ -627,7 +627,8 @@ let select_color fund n ok_colors =
     let no = M.find n !no_together in
     let no = List.map(fun a -> if M.mem a !color then M.find a !color else a)no in
     let remain = s_dif ok_colors no in
-    if not(S.is_empty remain ) then ans := (find_color remain) else ()
+    (if not(S.is_empty remain ) then ans := (find_color remain) else ());
+      (if List.mem n (fund.args @ fund.fargs) then ans := S.max_elt ok_colors else ())
    else ());
   (if !ans = "" then ans := (find_color ok_colors) else ());
   !ans
