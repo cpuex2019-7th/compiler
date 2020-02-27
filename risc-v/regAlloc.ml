@@ -91,10 +91,12 @@ exception NoReg of Id.t * Type.t
 let find x t regenv =
   if is_reg x then x else
   try M.find x regenv
-  with Not_found -> if x = Id.izero then reg_z else if x = Id.fzero then reg_fz else raise (NoReg(x, t))
+  with Not_found -> if x = Id.izero then reg_z else if x = Id.fzero then reg_fz else if x = Id.fone then reg_fone else raise (NoReg(x, t))
 let find' x' regenv =
   match x' with
-  | V(x) -> V(try (find x Type.Int regenv) with Not_found -> if x = Id.izero then reg_z else if x = Id.fzero then reg_fz else assert false)
+  | V(x) -> V(try (find x Type.Int regenv) with Not_found -> if x = Id.izero then reg_z else if x = Id.fzero then reg_fz else
+                                                               if x = Id.fone then reg_fone else 
+                                                               assert false)
   | c -> c
 
 let rec g dest cont regenv = function (* 命令列のレジスタ割り当て (caml2html: regalloc_g) *)
@@ -185,7 +187,7 @@ and g'_if dest cont regenv exp constr e1 e2 = (* ifのレジスタ割り当て (
       (fv cont) in
   (List.fold_left
      (fun e x ->
-       if x = fst dest || not (M.mem x regenv) || M.mem x regenv' || x = Id.izero || x = Id.fzero  then e else
+       if x = fst dest || not (M.mem x regenv) || M.mem x regenv' || x = Id.izero || x = Id.fzero  || x = Id.fone then e else
        seq(Save(M.find x regenv, x), e)) (* そうでない変数は分岐直前にセーブ *)
      (Ans(constr e1' e2'))
      (fv cont),
@@ -193,7 +195,7 @@ and g'_if dest cont regenv exp constr e1 e2 = (* ifのレジスタ割り当て (
 and g'_call dest cont regenv exp constr ys zs = (* 関数呼び出しのレジスタ割り当て (caml2html: regalloc_call) *)
   (List.fold_left
      (fun e x ->
-       if x = fst dest || not (M.mem x regenv) || x = Id.izero || x = Id.fzero then e else
+       if x = fst dest || not (M.mem x regenv) || x = Id.izero || x = Id.fzero || x = Id.fone then e else
        seq(Save(M.find x regenv, x), e))
      (Ans(constr
             (List.map (fun y -> find y Type.Int regenv) ys)
@@ -202,7 +204,7 @@ and g'_call dest cont regenv exp constr ys zs = (* 関数呼び出しのレジ�
    M.empty)
 
 let h { name = Id.L(x); args = ys; fargs = zs; body = e; ret = t } = (* 関数のレジスタ割り当て (caml2html: regalloc_h) *)
-  let regenv = M.add x reg_cl (M.add Id.izero reg_z (M.add Id.fzero reg_fz M.empty)) in
+  let regenv = M.add x reg_cl (M.add Id.fone reg_fone (M.add Id.izero reg_z (M.add Id.fzero reg_fz M.empty))) in
   let (i, arg_regs, regenv) =
     List.fold_left
       (fun (i, arg_regs, regenv) y ->

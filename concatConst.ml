@@ -30,7 +30,7 @@ let rec g env position = function
      else
        Let((x, ty), Int(i), g (MM.add (Int(i)) (x, position) env) (position + 1) e)       
   | Let((x, ty), Float(f), e) ->
-     if MM.mem (Float(f)) env && (snd (MM.find (Float(f)) env)) + f_dist > position && f <> 0.0
+     if MM.mem (Float(f)) env && (snd (MM.find (Float(f)) env)) + f_dist > position && f <> 0.0 && f<> 1.0
      then
        (Format.eprintf "concat %s %f @." (fst (MM.find (Float(f)) env)) f;
              Let((x , ty) , (Var(fst (MM.find (Float(f)) env))) , g env (position + 1) e))

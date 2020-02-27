@@ -10,7 +10,7 @@ let add x r regenv =
 let find x t regenv =
   if is_reg x then x else
   try M.find x regenv
-  with Not_found -> raise (NoReg(x, t))
+  with Not_found -> if x = Id.fone then (Format.eprintf "fone found @."; reg_fone) else raise (NoReg(x, t))
 let find' x' regenv =
   match x' with
   | V(x) -> V(find x Type.Int regenv)
