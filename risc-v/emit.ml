@@ -473,7 +473,7 @@ and g'_args oc name x_reg_cl ys zs =
       zs in
   List.iter
     (fun (z, fr) ->
-      add (Out.Farg((rename_reg fr), (rename_reg reg_z))))
+      add (Out.Farg((rename_reg fr), (rename_reg z))))
       (shuffle reg_fsw zfrs)
 
 
@@ -501,13 +501,23 @@ let f aaflag oc (Prog(data, fundefs, e)) =
   add (Out.Fmvwx("f0", "x0"));
   add (Out.Li("x2", "1300000"));
   add (Out.Li("x3", "0"));
-(*  (if aaflag = 0 then
+  (if aaflag = 0 then
      let write = Id.genid("write") in
      let actual = Id.genid("actual") in
-     let a = "x10" in let y = "x5" in let z = "x6" in let x = "x7" in
-     Printf.fprintf oc "\taddi\t%s, x0, 0xaa\n" a ;
-     Printf.fprintf oc "%s:\n\tli\t%s, 0x7F000000\n\tlbu\t%s, %s, 8\n\tandi\t%s, %s, 8\n\taddi\t%s, %s, 8\n\tbeq\t%s,  %s, %s\n%s:\n\tsb\t%s, %s, 4\n" write x y x y y z (rename_reg reg_z) y z write actual a x
-  else ());*)
+     let a = "x10" in
+     let y = "x5" in
+     let z = "x6" in
+     let x = "x7" in
+     add (Out.Addi(a, "x0", "0xaa"));
+     add (Out.FLAG(write));
+     add (Out.Li(x, "0x7F000000"));
+     add (Out.Lbu(y, x, "8"));
+     add (Out.Andi(y, y, "8"));
+     add (Out.Addi(z, (rename_reg reg_z), "8"));
+     add (Out.Beq(y, z, write));
+     add (Out.FLAG(actual));
+     add (Out.Sb(a, x, "4"))
+  else ());
   g oc (NonTail("x0"), e);
   (*  Printf.fprintf oc "\tadd\tx10, x4, x0 ; set output to a0 register\n"; (*デバッグ結果をx10に出力する*)*)
   add (Out.Jalr("x0", "x1", "0"));
